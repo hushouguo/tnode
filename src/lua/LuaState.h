@@ -13,7 +13,18 @@ BEGIN_NAMESPACE_TNODE {
 #define LUA_REGISTER_NAMESPACE				"cc"
 #define LUA_REGISTER_SERVICE				"cc.service"
 
-	template <typename T> lua_set_object(lua_State* L, const char* name, T* object) {
+	const char* luaT_tostring(lua_State* L, int idx);
+
+#define luaT_tracestack(L)	\
+	do {\
+		int args = lua_gettop(L);\
+		Debug << "lua tracestack: " << args;\
+		for (int i = 1; i <= args; ++i) {\
+			Debug << "  [" << i << "]  " << luaT_tostring(L, i) << "(" << lua_typename(L, lua_type(L, i)) << ")";\
+		}\
+	} while(0)
+
+	template <typename T> void luaT_set_object(lua_State* L, const char* name, T* object) {
 		lua_getglobal(L, "_G");
 		lua_pushstring(L, name);
 		lua_pushlightuserdata(L, object);
@@ -21,17 +32,16 @@ BEGIN_NAMESPACE_TNODE {
 		lua_pop(L, 1);	
 	}
 
-	template <typename T> T* lua_get_object(lua_State* L, const char* name) {
-		int args = lua_gettop(L);
+	template <typename T> T* luaT_get_object(lua_State* L, const char* name) {
 		lua_getglobal(L, name);
-		Assert(lua_islightuserdata(L, -args), "top: %d, type: %s", args, lua_typename(L, lua_type(L, -args)));
-		void* userdata = lua_touserdata(L, -args);
+		Assert(lua_islightuserdata(L, -1), "top: %d, type: %s", lua_gettop(L), lua_typename(L, lua_type(L, -1)));
+		void* userdata = lua_touserdata(L, -1);
 		lua_pop(L, 1);/* remove `userdata` */
 		return static_cast<T*>(userdata);
 	}
 
-#define SetService(L, S)	lua_set_object<Service>(L, LUA_REGISTER_SERVICE, S)
-#define GetService(L)		lua_get_object<Service>(L, LUA_REGISTER_SERVICE)
+#define SetService(L, S)	luaT_set_object<Service>(L, LUA_REGISTER_SERVICE, S)
+#define GetService(L)		luaT_get_object<Service>(L, LUA_REGISTER_SERVICE)
 
 #define LUA_REGISTER(L, F, ROUTINE) \
 	lua_pushstring(L, F);\
@@ -72,12 +82,10 @@ BEGIN_NAMESPACE_TNODE {
 			inline Service* service() { return this->_service; }
 
 			void verinfo();
-			void backtrace();
 
 		private:
 			Service* _service = nullptr;
 			lua_State* _L = nullptr;
-			const char* tostring(int idx);
 			void dumpTable(int idx, const char* prefix);
 	};
 }

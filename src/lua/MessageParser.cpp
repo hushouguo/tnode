@@ -64,12 +64,13 @@ BEGIN_NAMESPACE_TNODE {
 		std::function<bool(const char*)> func = [this](const char* fullname)->bool {
 			return this->parseProtoFile(fullname);
 		};
-		return traverseDirectory(filename, "*.proto", std::ref(func));
+		return traverseDirectory(filename, ".proto", std::ref(func));
 	}
 
 	bool MessageParserInternal::parseProtoFile(const char* filename) {
 		const FileDescriptor* fileDescriptor = this->_in->Import(filename);
 		CHECK_RETURN(fileDescriptor, false, "import file: %s failure", filename);
+		//Debug << "import file: " << filename;
 		return true;
 	}
 

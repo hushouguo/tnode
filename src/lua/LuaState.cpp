@@ -143,15 +143,6 @@ BEGIN_NAMESPACE_TNODE {
 		lua_pop(L, 1);/* remove `table` */
 	}
 
-	void LuaState::backtrace() {
-		lua_State* L = this->luaState();
-		int args = lua_gettop(L);
-		Debug << "backtrace: " << args;
-		for (int i = 1; i <= args; ++i) {
-			Debug << "  [" << i << "] " << this->tostring(i);
-		}
-	}
-	
 	void LuaState::registerNamespace(const char* ns) {
 		lua_State* L = this->luaState();
 		lua_getglobal(L, "_G");
@@ -216,26 +207,6 @@ BEGIN_NAMESPACE_TNODE {
 		lua_settable(L, -3);
 	}
 
-	const char* LuaState::tostring(int idx) {
-		lua_State* L = this->luaState();
-		if (lua_istable(L, idx)) { return "[table]"; }
-		else if (lua_isnone(L, idx)) { return "[none]"; }
-		else if (lua_isnil(L, idx)) { return "[nil]"; }
-		else if (lua_isboolean(L, idx)) {
-			return lua_toboolean(L, idx) != 0 ? "[true]" : "[false]";
-		}
-		else if (lua_isfunction(L, idx)) { return "[function]"; }
-		else if (lua_islightuserdata(L, idx)) { return "[lightuserdata]"; }
-		else if (lua_isthread(L, idx)) { return "[thread]"; }
-		else {
-			const char* str = lua_tostring(L, idx);
-			if (str) {
-				return str;
-			}
-		}
-		return lua_typename(L, lua_type(L, idx));
-	}
-
 	void LuaState::dumpTable(int idx, const char* prefix) {
 		lua_State* L = this->luaState();
 		lua_pushnil(L);
@@ -243,7 +214,7 @@ BEGIN_NAMESPACE_TNODE {
 			/* -2 : key, -1 : value */
 			lua_pushvalue(L, -2);
 			const char* key = lua_tostring(L, -1);
-			const char* value = this->tostring(-2);
+			const char* value = luaT_tostring(L, -2);
 			lua_pop(L, 1);
 
 			Debug.cout("%s%15s: %s", prefix, key, value);
@@ -288,5 +259,23 @@ BEGIN_NAMESPACE_TNODE {
 		printf("\n");
 		*/
 #endif
+	}
+
+
+	const char* luaT_tostring(lua_State* L, int idx) {
+		if (lua_istable(L, idx)) { return "[table]"; }
+		else if (lua_isnone(L, idx)) { return "[none]"; }
+		else if (lua_isnil(L, idx)) { return "[nil]"; }
+		else if (lua_isboolean(L, idx)) {
+			return lua_toboolean(L, idx) != 0 ? "[true]" : "[false]";
+		}
+		else if (lua_isfunction(L, idx)) { return "[function]"; }
+		else if (lua_isuserdata(L, idx)) { return "[userdata]"; }
+		else if (lua_islightuserdata(L, idx)) { return "[lightuserdata]"; }
+		else if (lua_isthread(L, idx)) { return "[thread]"; }
+		else {
+			return lua_tostring(L, idx);
+		}
+		return lua_typename(L, lua_type(L, idx));
 	}
 }

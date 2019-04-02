@@ -33,4 +33,6 @@ function print_r ( t )
     print()
 end
 
+--print_r(_G)
+
 cc.newservice("scripts/login.lua")
