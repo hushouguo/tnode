@@ -26,7 +26,7 @@ BEGIN_NAMESPACE_TNODE {
 		Socketmessage rawmsg;
 	};
 
-	Servicemessage* allocate_message(SOCKET, Socketmessage*);
+	//Servicemessage* allocate_message(SOCKET, Socketmessage*);
 	
 #if false
 #define NEW_MSG(STRUCTURE, ...)	\
