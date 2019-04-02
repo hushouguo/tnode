@@ -70,6 +70,37 @@ cc.log_trace("second: " .. cc.timesec() .. ", millisecond: " .. cc.timemsec())
 --cc.dispatch(function(source, fd, msgid, data, len)
 --end)
 
+
+--print_r(_G)
+
+function test_message_parser()
+	local o = {
+		people = {
+			{
+				name = "hushouguo",
+				id = 1,
+				email = "kilimajaro@gmail.com",
+				phones = {
+					{
+						number = "086-87654321",
+						type = 2
+					},
+					{
+						number = "086-12345678",
+						type = 1
+					}
+				}
+			}
+		}
+	}
+	local s = cc.message_encode("AddressBook", o)
+	print("s: " .. s)
+	local o = cc.message_decode("AddressBook", s)
+	print_r(o)
+end
+
+test_message_parser()
+
 cc.dispatch(msgid, function(source, fd, data, len)
 end)
 

@@ -14,9 +14,9 @@ BEGIN_NAMESPACE_TNODE {
 
 	bool Service::init(const char* entryfile) {
 		SafeDelete(this->_messageParser);
-		const char* proto_dir = sConfig.get("tnode.protocol", nullptr);
+		const char* proto_dir = sConfig.get("tnode.protocol", (const char*) nullptr);
 		CHECK_RETURN(proto_dir, false, "lack `tnode.protocol`");
-		this->_messageParser = MessageParser::creator();
+		this->_messageParser = MessageParserCreator::create();
 		bool retval = this->_messageParser->load(proto_dir);
 		CHECK_RETURN(retval, false, "load protocol: %s error", proto_dir);
 		
