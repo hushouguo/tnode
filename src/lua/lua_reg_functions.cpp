@@ -346,14 +346,14 @@ BEGIN_NAMESPACE_TNODE {
 
 
 	//
-	// bool listen(address, port, function)
+	// bool listen(address, port, function(fd, entityid, msgid, Servicemessage))
 	static int cc_listen(lua_State* L) {
 		return 0;
 	}
 
 
 	//
-	// bool connect(address, port, function)
+	// bool connect(address, port, function(fd, entityid, msgid, Servicemessage))
 	static int cc_connect(lua_State* L) {
 		return 0;
 	}

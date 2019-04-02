@@ -11,6 +11,24 @@
 BEGIN_NAMESPACE_TNODE {
 	class Service;
 	class Socket {
+		public:						
+			virtual ~Socket() = 0;
+
+		public:
+			virtual SOCKET fd() = 0;
+			virtual void close() = 0;
+			
+		public:
+			virtual const Socketmessage* receiveMessage() = 0;
+			virtual void sendMessage(const void*, size_t) = 0;
+			virtual void sendMessage(const Socketmessage*) = 0;
+		
+			virtual bool receiveMessage(Socketmessage*& msg) = 0;
+			virtual bool sendMessage() = 0;
+			virtual bool sendMessage(const Socketmessage* msg) = 0;
+	};
+	
+	class Socket {
 		public:
 			Socket(SOCKET connfd, Service* service) : _fd(connfd) {
 				nonblocking(this->fd());

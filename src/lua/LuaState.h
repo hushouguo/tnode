@@ -18,7 +18,7 @@ BEGIN_NAMESPACE_TNODE {
 		lua_pushstring(L, name);
 		lua_pushlightuserdata(L, object);
 		lua_rawset(L, -3);
-		lua_pop(L, 1);	
+		lua_pop(L, 1);
 	}
 
 	template <typename T> T* lua_get_object(lua_State* L, const char* name) {
