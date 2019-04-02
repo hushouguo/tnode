@@ -13,10 +13,26 @@ BEGIN_NAMESPACE_TNODE {
 #define LUA_REGISTER_NAMESPACE				"cc"
 #define LUA_REGISTER_SERVICE				"cc.service"
 
-	void lua_set_userdata(lua_State* L, const char* name, void* p);
-	void* lua_get_userdata(lua_State* L, const char* name);
-	
-	
+	template <typename T> lua_set_object(lua_State* L, const char* name, T* object) {
+		lua_getglobal(L, "_G");
+		lua_pushstring(L, name);
+		lua_pushlightuserdata(L, object);
+		lua_rawset(L, -3);
+		lua_pop(L, 1);	
+	}
+
+	template <typename T> T* lua_get_object(lua_State* L, const char* name) {
+		int args = lua_gettop(L);
+		lua_getglobal(L, name);
+		Assert(lua_islightuserdata(L, -args), "top: %d, type: %s", args, lua_typename(L, lua_type(L, -args)));
+		void* userdata = lua_touserdata(L, -args);
+		lua_pop(L, 1);/* remove `userdata` */
+		return static_cast<T*>(userdata);
+	}
+
+#define SetService(L, S)	lua_set_object<Service>(L, LUA_REGISTER_SERVICE, S)
+#define GetService(L)		lua_get_object<Service>(L, LUA_REGISTER_SERVICE)
+
 #define LUA_REGISTER(L, F, ROUTINE) \
 	lua_pushstring(L, F);\
 	lua_pushcfunction(L, ROUTINE);\

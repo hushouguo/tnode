@@ -15,6 +15,7 @@ BEGIN_NAMESPACE_TNODE {
 
 		public:
 			inline LuaState* luaState() { return this->_luaState; }
+			inline MessageParser* messageParser() { return this->_messageParser; }
 
 		public:
 			bool init(const char* entryfile);
@@ -25,6 +26,7 @@ BEGIN_NAMESPACE_TNODE {
 			bool _isstop = false;
 			std::string _entryfile;
 			LuaState* _luaState = nullptr;
+			MessageParser* _messageParser = nullptr;
 
 		public:
 			inline void regfunction(int ref) {

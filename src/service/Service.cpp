@@ -13,11 +13,18 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	bool Service::init(const char* entryfile) {
+		SafeDelete(this->_messageParser);
+		const char* proto_dir = sConfig.get("tnode.protocol", nullptr);
+		CHECK_RETURN(proto_dir, false, "lack `tnode.protocol`");
+		this->_messageParser = MessageParser::creator();
+		bool retval = this->_messageParser->load(proto_dir);
+		CHECK_RETURN(retval, false, "load protocol: %s error", proto_dir);
+		
 		SafeDelete(this->_luaState);
-		this->_luaState = new LuaState(this);
+		this->_luaState = new LuaState(this);		
 		this->_entryfile = entryfile;
 		/* run entry script file */
-		if (!this->_luaState->executeFile(this->_entryfile.c_str())) { return false; }	
+		if (!this->_luaState->executeFile(this->_entryfile.c_str())) { return false; }		
 		return true;
 	}
 
@@ -25,6 +32,7 @@ BEGIN_NAMESPACE_TNODE {
 		if (!this->_isstop) {
 			this->_isstop = true;
 			SafeDelete(this->_luaState);
+			SafeDelete(this->_messageParser);
 		}
 	}
 

@@ -17,7 +17,7 @@ BEGIN_NAMESPACE_TNODE {
 
 		//verinfo();
 
-		lua_set_userdata(this->_L, LUA_REGISTER_SERVICE, service);
+		SetService(this->_L, service);
 		
 		this->registerNamespace(LUA_REGISTER_NAMESPACE);		
 
@@ -288,22 +288,5 @@ BEGIN_NAMESPACE_TNODE {
 		printf("\n");
 		*/
 #endif
-	}
-
-	void lua_set_userdata(lua_State* L, const char* name, void* p) {
-		lua_getglobal(L, "_G");
-		lua_pushstring(L, name);
-		lua_pushlightuserdata(L, p);
-		lua_rawset(L, -3);
-		lua_pop(L, 1);
-	}
-	
-	void* lua_get_userdata(lua_State* L, const char* name) {
-		int args = lua_gettop(L);
-		lua_getglobal(L, name);
-		Assert(lua_islightuserdata(L, -args), "top: %d, type: %s", args, lua_typename(L, lua_type(L, -args)));
-		void* userdata = lua_touserdata(L, -args);
-		lua_pop(L, 1);/* remove `userdata` */
-		return userdata;
 	}
 }

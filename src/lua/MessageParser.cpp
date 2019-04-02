@@ -7,43 +7,74 @@
 
 #define DEF_NIL_VALUE		1
 
-BEGIN_NAMESPACE_TNODE {
-	MessageParser::MessageParser() {
-		this->init();
-	}
+using namespace google::protobuf;
+using namespace google::protobuf::compiler;
 
-	MessageParser::~MessageParser() {
-		cleanup();
-	}
+BEGIN_NAMESPACE_TNODE {	
+	class MessageParserInternal : public MessageParser {
+		public:
+			MessageParserInternal();
+			~MessageParserInternal();
 
-	bool MessageParser::init() {
-		this->_tree.MapPath("", "./");
-		this->_in = new Importer(&this->_tree, &this->_errorCollector);
-		return true;
-	}
+		public:
+			bool load(const char* filename) override;/* filename also is directory */
 
-	void MessageParser::cleanup() {
-		for (auto& i : this->_messages) {
-			delete i.second;
-		}
-		this->_messages.clear();
-		delete this->_in;
-	}
+		public:
+			bool encode(lua_State* L, const char* name, void* buf, size_t& bufsize) override;
+			bool encode(lua_State* L, const char* name, std::string& out) override;
+			bool decode(lua_State* L, const char* name, void* buf, size_t bufsize) override;
+			bool decode(lua_State* L, const char* name, const std::string& in) override;
 
-	bool MessageParser::parseProtoFile(const char* filename) {
-		const FileDescriptor* fileDescriptor = this->_in->Import(filename);
-		CHECK_RETURN(fileDescriptor, false, "import file: %s failure", filename);
-		return true;
-	}
+		private:
+			DiskSourceTree _tree;
+			Importer* _in;
+			DynamicMessageFactory _factory;
+			std::unordered_map<uint32_t, Message*> _messages;
 
-	bool MessageParser::init(const char* filename) {
+			class ImporterErrorCollector : public MultiFileErrorCollector {
+				public:
+					// implements ErrorCollector ---------------------------------------
+					void AddError(const std::string& filename, int line, int column,	const std::string& message) override {
+						Error.cout("file: %s:%d:%d, error: %s", filename.c_str(), line, column, message.c_str());
+					}
+
+					void AddWarning(const std::string& filename, int line, int column, const std::string& message) override {
+						Error.cout("file: %s:%d:%d, error: %s", filename.c_str(), line, column, message.c_str());
+					}
+			};
+			ImporterErrorCollector _errorCollector;
+
+			bool parseProtoFile(const char* filename);
+			Message* NewMessage(const char* name);
+
+		private:
+			bool encodeDescriptor(lua_State* L, Message* message, const Descriptor* descriptor, const Reflection* ref);
+			bool encodeField(lua_State* L, Message* message, const FieldDescriptor* field, const Reflection* ref);
+			bool encodeFieldSimple(lua_State* L, Message* message, const FieldDescriptor* field, const Reflection* ref);
+			bool encodeFieldRepeated(lua_State* L, Message* message, const FieldDescriptor* field, const Reflection* ref);
+
+			bool decodeDescriptor(lua_State* L, const Message& message, const Descriptor* descriptor, const Reflection* ref);
+			bool decodeField(lua_State* L, const Message& message, const FieldDescriptor* field, const Reflection* ref);
+			bool decodeFieldSimple(lua_State* L, const Message& message, const FieldDescriptor* field, const Reflection* ref);
+			bool decodeFieldRepeated(lua_State* L, const Message& message, const FieldDescriptor* field, const Reflection* ref, int index);
+			void decodeFieldDefaultValue(lua_State* L, const Message& message, const FieldDescriptor* field);
+	};
+
+	bool MessageParserInternal::load(const char* filename) {
 		std::function<bool(const char*)> func = [this](const char* fullname)->bool {
 			return this->parseProtoFile(fullname);
 		};
 		return traverseDirectory(filename, "*.proto", std::ref(func));
 	}
 
-	Message* MessageParser::NewMessage(const char* name) {
+	bool MessageParserInternal::parseProtoFile(const char* filename) {
+		const FileDescriptor* fileDescriptor = this->_in->Import(filename);
+		CHECK_RETURN(fileDescriptor, false, "import file: %s failure", filename);
+		return true;
+	}
+
+
+	Message* MessageParserInternal::NewMessage(const char* name) {
 		uint32_t id = hashString(name);
 		auto i = this->_messages.find(id);
 		if (i != this->_messages.end()) {
@@ -67,7 +98,7 @@ BEGIN_NAMESPACE_TNODE {
 
 	//-----------------------------------------------------------------------------------------------------------------------
 
-	bool MessageParser::encodeFieldRepeated(lua_State* L, Message* message, const FieldDescriptor* field, const Reflection* ref)
+	bool MessageParserInternal::encodeFieldRepeated(lua_State* L, Message* message, const FieldDescriptor* field, const Reflection* ref)
 	{
 		assert(field->is_repeated());
 		bool rc = true;
@@ -101,7 +132,7 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 
-	bool MessageParser::encodeFieldSimple(lua_State* L, Message* message, const FieldDescriptor* field, const Reflection* ref) {
+	bool MessageParserInternal::encodeFieldSimple(lua_State* L, Message* message, const FieldDescriptor* field, const Reflection* ref) {
 		assert(!field->is_repeated());
 		bool rc = true;
 		if (!lua_isnoneornil(L, -1)) {
@@ -133,7 +164,7 @@ BEGIN_NAMESPACE_TNODE {
 		return rc;
 	}
 
-	bool MessageParser::encodeField(lua_State* L, Message* message, const FieldDescriptor* field, const Reflection* ref) {
+	bool MessageParserInternal::encodeField(lua_State* L, Message* message, const FieldDescriptor* field, const Reflection* ref) {
 		bool rc = true;
 		if (field->is_repeated()) {
 			lua_pushstring(L, field->name().c_str());/* push key */
@@ -169,7 +200,7 @@ BEGIN_NAMESPACE_TNODE {
 		return rc;
 	}
 
-	bool MessageParser::encodeDescriptor(lua_State* L, Message* message, const Descriptor* descriptor, const Reflection* ref) {
+	bool MessageParserInternal::encodeDescriptor(lua_State* L, Message* message, const Descriptor* descriptor, const Reflection* ref) {
 		CHECK_RETURN(lua_istable(L, -1), false, "stack top not table for message: %s", message->GetTypeName().c_str());
 		int field_count = descriptor->field_count();
 		for (int i = 0; i < field_count; ++i) {
@@ -182,7 +213,7 @@ BEGIN_NAMESPACE_TNODE {
 		return true;
 	}
 
-	bool MessageParser::encode(lua_State* L, const char* name, void* buf, size_t& bufsize) {
+	bool MessageParserInternal::encode(lua_State* L, const char* name, void* buf, size_t& bufsize) {
 		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
 		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", name);
 		Message* message = this->NewMessage(name);
@@ -210,7 +241,7 @@ BEGIN_NAMESPACE_TNODE {
 		return true;
 	}
 
-	bool MessageParser::encode(lua_State* L, const char* name, std::string& out) {
+	bool MessageParserInternal::encode(lua_State* L, const char* name, std::string& out) {
 		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
 		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", name);
 
@@ -241,7 +272,7 @@ BEGIN_NAMESPACE_TNODE {
 
 	//-------------------------------------------------------------------------------------------------------
 
-	void MessageParser::decodeFieldDefaultValue(lua_State* L, const Message& message, const FieldDescriptor* field) {
+	void MessageParserInternal::decodeFieldDefaultValue(lua_State* L, const Message& message, const FieldDescriptor* field) {
 		if (field->is_repeated()) {
 			lua_pushstring(L, field->name().c_str());
 #ifdef DEF_NIL_VALUE
@@ -297,7 +328,7 @@ BEGIN_NAMESPACE_TNODE {
 		}
 	}
 
-	bool MessageParser::decodeFieldRepeated(lua_State* L, const Message& message, const FieldDescriptor* field, const Reflection* ref, int index)
+	bool MessageParserInternal::decodeFieldRepeated(lua_State* L, const Message& message, const FieldDescriptor* field, const Reflection* ref, int index)
 	{
 		assert(field->is_repeated());
 		bool rc = true;
@@ -344,7 +375,7 @@ BEGIN_NAMESPACE_TNODE {
 		return rc;
 	}
 
-	bool MessageParser::decodeFieldSimple(lua_State* L, const Message& message, const FieldDescriptor* field, const Reflection* ref)
+	bool MessageParserInternal::decodeFieldSimple(lua_State* L, const Message& message, const FieldDescriptor* field, const Reflection* ref)
 	{
 		assert(!field->is_repeated());
 		bool rc = true;
@@ -395,7 +426,7 @@ BEGIN_NAMESPACE_TNODE {
 		return rc;
 	}
 
-	bool MessageParser::decodeField(lua_State* L, const Message& message, const FieldDescriptor* field, const Reflection* ref) {
+	bool MessageParserInternal::decodeField(lua_State* L, const Message& message, const FieldDescriptor* field, const Reflection* ref) {
 		bool rc = true;
 		if (field->is_repeated()) {
 			lua_pushstring(L, field->name().c_str());
@@ -416,7 +447,7 @@ BEGIN_NAMESPACE_TNODE {
 		return rc;
 	}
 
-	bool MessageParser::decodeDescriptor(lua_State* L, const Message& message, const Descriptor* descriptor, const Reflection* ref)
+	bool MessageParserInternal::decodeDescriptor(lua_State* L, const Message& message, const Descriptor* descriptor, const Reflection* ref)
 	{
 		int field_count = descriptor->field_count();
 		for (int i = 0; i < field_count; ++i) {
@@ -435,7 +466,7 @@ BEGIN_NAMESPACE_TNODE {
 		return true;
 	}
 
-	bool MessageParser::decode(lua_State* L, const char* name, void* buf, size_t bufsize) {
+	bool MessageParserInternal::decode(lua_State* L, const char* name, void* buf, size_t bufsize) {
 		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
 		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", name);
 
@@ -463,7 +494,7 @@ BEGIN_NAMESPACE_TNODE {
 		return true;
 	}
 
-	bool MessageParser::decode(lua_State* L, const char* name, const std::string& in) {
+	bool MessageParserInternal::decode(lua_State* L, const char* name, const std::string& in) {
 		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
 		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", name);
 
@@ -490,5 +521,23 @@ BEGIN_NAMESPACE_TNODE {
 
 		return true;
 	}
+
+
+	MessageParser::~MessageParser() {}
+	MessageParserInternal::MessageParserInternal() {
+		this->_tree.MapPath("", "./");
+		this->_in = new Importer(&this->_tree, &this->_errorCollector);
+	}
+	MessageParserInternal::~MessageParserInternal() {
+		for (auto& i : this->_messages) {
+			delete i.second;
+		}
+		this->_messages.clear();
+		SafeDelete(this->_in);
+	}
+	
+	MessageParser* MessageParserCreator::create() {
+		return new MessageParserInternal();
+	}	
 }
 

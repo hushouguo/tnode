@@ -13,10 +13,9 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(lua_isfunction(L, -args), 0, "`%s` expect function: %s", __FUNCTION__, lua_typename(L, lua_type(L, -args)));
 		lua_pushvalue(L, -args);
 		int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-		void* userdata = lua_get_userdata(L, LUA_REGISTER_SERVICE);
-		if (userdata) {
-			static_cast<Service*>(userdata)->regfunction(ref);
-		}
+		Service* service = GetService(L);
+		assert(service);
+		service->regfunction(ref);
 		return 0;		
 	}
 #endif
@@ -122,6 +121,40 @@ BEGIN_NAMESPACE_TNODE {
 		std::string decoded_string;
 	   	base64_decode(encoded_string, decoded_string);	
 		lua_pushstring(L, decoded_string.c_str());
+		return 1;
+	}
+	
+	//
+	// string message_encode(name, table)
+	static int cc_message_encode(lua_State* L) {
+		int args = lua_gettop(L);
+		CHECK_RETURN(args > 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
+		CHECK_RETURN(lua_istable(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
+		const char* name = lua_tostring(L, -args);
+		Service* service = GetService(L);
+		assert(service);
+		std::string outstring;
+		bool retval = service->messageParser()->encode(L, name, outstring);
+		CHECK_RETURN(retval, 0, "encode message: %s error", name);
+		lua_pushstring(L, outstring.c_str());
+		return 1;
+	}
+
+	//
+	// table message_decode(name, string)
+	static int cc_message_decode(lua_State* L) {
+		int args = lua_gettop(L);
+		CHECK_RETURN(args > 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));			
+		CHECK_RETURN(lua_isstring(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));			
+		const char* name = lua_tostring(L, -args);
+		std::string instring = lua_tostring(L, -(args - 1));
+		Service* service = GetService(L);
+		assert(service);
+		bool retval = service->messageParser()->decode(L, name, instring);
+		CHECK_RETURN(retval, 0, "decode message: %s error", name);
+		// table is in the top of stack
 		return 1;
 	}
 
@@ -337,50 +370,55 @@ BEGIN_NAMESPACE_TNODE {
 
 		luaState->beginNamespace(LUA_REGISTER_NAMESPACE);
 
-		/* service */
+		// service
 		LUA_REGISTER(L, "newservice", cc_newservice);
 		LUA_REGISTER(L, "sendmsg", cc_sendmsg);
 
-		/* network */
+		// network
 		LUA_REGISTER(L, "listen", cc_listen);
 		LUA_REGISTER(L, "connect", cc_connect);
 		LUA_REGISTER(L, "response", cc_response);
 
-		/* logger */
+		// logger
 		LUA_REGISTER(L, "log_debug", cc_log_debug);
 		LUA_REGISTER(L, "log_trace", cc_log_trace);
 		LUA_REGISTER(L, "log_alarm", cc_log_alarm);
 		LUA_REGISTER(L, "log_error", cc_log_error);
 		
-		/* json */
+		// json
 		LUA_REGISTER(L, "json_decode", cc_json_decode);
 		LUA_REGISTER(L, "json_encode", cc_json_encode);
 
-		/* xml */
+		// xml
 		LUA_REGISTER(L, "xml_decode", cc_xml_decode);
 		LUA_REGISTER(L, "xml_encode", cc_xml_encode);
 
-		/* hash string */
+		// hash string
 		LUA_REGISTER(L, "hash_string", cc_hash_string);
 		
-		/* random */
+		// random
 		LUA_REGISTER(L, "random", cc_random);
 		LUA_REGISTER(L, "random_between", cc_random_between);
 
-		/* base64 */
+		// base64
 		LUA_REGISTER(L, "base64_encode", cc_base64_encode);
 		LUA_REGISTER(L, "base64_decode", cc_base64_decode);
 
-		/* md5 */
+		// md5
 		LUA_REGISTER(L, "md5", cc_md5);
 
-		/* time */
+		// time
 		LUA_REGISTER(L, "timesec", cc_timesec);
 		LUA_REGISTER(L, "timemsec", cc_timemsec);
 		LUA_REGISTER(L, "timestamp", cc_timestamp);
 		LUA_REGISTER(L, "timespec", cc_timespec);
 		LUA_REGISTER(L, "msleep", cc_msleep);
 
+		// message parser
+		LUA_REGISTER(L, "message_encode", cc_message_encode);
+		LUA_REGISTER(L, "message_decode", cc_message_decode);
+
+		
 		//TODO: timer
 		//TODO: file i/o
 		//TODO: http
