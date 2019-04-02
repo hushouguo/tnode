@@ -15,38 +15,42 @@ BEGIN_NAMESPACE_TNODE {
 		::close(this->_epfd);
 	}
 
-	bool Poll::addSocket(SOCKET s) {
-		//System << "Poll::addSocket: " << s;
+	bool Poll::addSocket(Socket* s) {
+		//System << "Poll::addSocket: " << s->fd();
 		struct epoll_event ee;
 		ee.events = EPOLLET | EPOLLIN | EPOLLOUT | EPOLLERR;
 		ee.data.u64 = 0; /* avoid valgrind warning */
-		ee.data.fd = s;
-		int rc = epoll_ctl(this->_epfd, EPOLL_CTL_ADD, s, &ee);		
+		ee.data.ptr = s;
+		int rc = epoll_ctl(this->_epfd, EPOLL_CTL_ADD, s->fd(), &ee);		
 		CHECK_RETURN(rc == 0, false, "epoll_add error: %d, %s", errno, strerror(errno));
 		return true;
 	}
 
-	bool Poll::removeSocket(SOCKET s) {
+	bool Poll::removeSocket(Socket* s) {
 		//System << "Poll::removeSocket: " << s;
 		struct epoll_event ee;
 		ee.events = EPOLLET | EPOLLIN | EPOLLOUT | EPOLLERR;
 		ee.data.u64 = 0; /* avoid valgrind warning */
-		ee.data.fd = s;
+		ee.data.ptr = s;
 		/* Note, Kernel < 2.6.9 requires a non null event pointer even for EPOLL_CTL_DEL. */
-		int rc = epoll_ctl(this->_epfd, EPOLL_CTL_DEL, s, &ee);
+		int rc = epoll_ctl(this->_epfd, EPOLL_CTL_DEL, s->fd(), &ee);
 		CHECK_RETURN(rc == 0, false, "epoll_del error: %d, %s", errno, strerror(errno));
 		return true;
 	}
 
-	bool Poll::setSocketPollout(SOCKET s, bool value) {
+	bool Poll::setSocketPollout(Socket* s, bool value) {
 		struct epoll_event ee;
 		ee.events = value ? (EPOLLET | EPOLLIN | EPOLLOUT | EPOLLERR) : (EPOLLET | EPOLLIN | EPOLLERR);
 		ee.data.u64 = 0; /* avoid valgrind warning */
-		ee.data.fd = s;
+		ee.data.ptr = s;
 		/* Note, Kernel < 2.6.9 requires a non null event pointer even for EPOLL_CTL_DEL. */
-		int rc = epoll_ctl(this->_epfd, EPOLL_CTL_MOD, s, &ee);
+		int rc = epoll_ctl(this->_epfd, EPOLL_CTL_MOD, s->fd(), &ee);
 		CHECK_RETURN(rc == 0, false, "epoll_mod error: %d, %s, socket: %d", errno, strerror(errno), s);
 		return true;
+	}
+
+	void Poll::shutdown() {
+		SafeClose(this->_epfd); // try to wakeup this thread
 	}
 
 	void Poll::run(int milliseconds) {
@@ -60,6 +64,7 @@ BEGIN_NAMESPACE_TNODE {
 		}
 		for (int i = 0; i < numevents; ++i) {
 			struct epoll_event* ee = &this->_events[i];
+			Socket* s = static_cast<Socket*>(ee.data.ptr);
 			if (ee->events & (EPOLLERR | EPOLLHUP)) {
 				Error.cout("fd: %d poll error or hup: %d", ee->data.fd, ee->events);
 				//this->_slotWorker->errorSocket(ee->data.fd);
@@ -71,13 +76,13 @@ BEGIN_NAMESPACE_TNODE {
 			else {
 				bool rc = true;
 				if (ee->events & EPOLLIN) {
-					if (rc) { 
-						//rc = this->_slotWorker->readSocket(ee->data.fd); 
+					if (rc) {
+						rc = s->read();
 					}
 				}
 				if (ee->events & EPOLLOUT) {
 					if (rc) {
-						//rc = this->_slotWorker->writeSocket(ee->data.fd);
+						rc = s->write();
 					}
 				}
 			}

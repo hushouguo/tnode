@@ -13,7 +13,7 @@ BEGIN_NAMESPACE_TNODE {
 	void NetworkManager::stop() {
 		if (!this->_isstop) {
 			this->_isstop = true;
-			//TODO: close epfd
+			this->_poll.shutdown();
 			if (this->_netthread && this->_netthread->joinable()) {
 				this->_netthread->join();
 			}

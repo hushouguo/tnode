@@ -7,9 +7,9 @@
 #define __SERVICE_H__
 
 BEGIN_NAMESPACE_TNODE {
-	class Service : public Entry<int> {
+	class Service : public Entry<u32> {
 		public:
-			Service(int id);
+			Service(u32 id);
 			Service(const char* name);
 			const char* getClassName() override { return "Service"; }
 
@@ -37,7 +37,7 @@ BEGIN_NAMESPACE_TNODE {
 			std::list<int> _regfuncs;
 		
 		public:
-			void pushMessage(Servicemessage* newmsg);
+			void pushMessage(Servicemessage* msg);
 			inline bool msgQueueEmpty() { return this->_msgQueue.empty(); }
 			inline bool inQueue() { return this->_inQueue; }
 			inline void intoQueue() { assert(this->_inQueue == false); this->_inQueue = true; }

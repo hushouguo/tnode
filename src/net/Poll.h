@@ -16,12 +16,13 @@ BEGIN_NAMESPACE_TNODE {
 			~Poll();
 
 		public:
+			void shutdown();
 			void run(int milliseconds);
 			
 		public:
-			bool addSocket(SOCKET s);
-			bool removeSocket(SOCKET s);
-			bool setSocketPollout(SOCKET s, bool value);
+			bool addSocket(Socket* s);
+			bool removeSocket(Socket* s);
+			bool setSocketPollout(Socket* s, bool value);
 
 		private:
 			int _epfd = -1;

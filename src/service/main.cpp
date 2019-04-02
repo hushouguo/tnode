@@ -170,32 +170,28 @@ bool init_runtime_environment(int argc, char* argv[]) {
 	return true;
 }
 
-//
-// shutdown routine
-void shutdown() {
-	//NOTE: cleanup internal resource
-	Trace.cout("shutdown system with terminate reason: %d", sConfig.terminate_reason);
-	Easylog::syslog()->stop();
-	// Optional:  Delete all global objects allocated by libprotobuf.
-	google::protobuf::ShutdownProtobufLibrary();
-}
-
 int main(int argc, char* argv[]) {
 	if (!init_runtime_environment(argc, argv)) { return 1; }
 
+	sNetworkManager.init();
 	sThreadPool.init(sConfig.threads);
 	CHECK_GOTO(sServiceManager.newservice(sConfig.get("tnode.entryfile", "N/A")), exit_failure, "ServiceManager init failure");
 
 	while (!sConfig.halt) {
 		sTime.now();
-		sServiceManager.schedule();
+		sServiceManager.schedule();		
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}	
 
 exit_failure:
 	sServiceManager.stop();
 	sThreadPool.stop();
-	shutdown();
+	sNetworkManager.stop();
+	sMessageQueue.stop();
+	Trace.cout("shutdown system with terminate reason: %d", sConfig.terminate_reason);
+	Easylog::syslog()->stop();
+	// Optional:  Delete all global objects allocated by libprotobuf.
+	google::protobuf::ShutdownProtobufLibrary();
 	return 0;	
 }
 

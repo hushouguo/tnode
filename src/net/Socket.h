@@ -6,7 +6,7 @@
 #ifndef __SOCKET_H__
 #define __SOCKET_H__
 
-#define COUNT_MESSAGE_SPAN	60
+#define DEF_MESSAGE_SIZE	1024
 
 BEGIN_NAMESPACE_TNODE {
 	class Service;
@@ -16,17 +16,49 @@ BEGIN_NAMESPACE_TNODE {
 
 		public:
 			virtual SOCKET fd() = 0;
-			virtual void close() = 0;
+			virtual bool listening() = 0;
+			virtual void listening(bool value) = 0;
+			virtual Service* service() = 0;
+			virtual void service(Service*) = 0;
 			
 		public:
-			virtual const Socketmessage* receiveMessage() = 0;
+			virtual const Servicemessage* receiveMessage() = 0;
 			virtual void sendMessage(const void*, size_t) = 0;
-			virtual void sendMessage(const Socketmessage*) = 0;
-		
-			virtual bool receiveMessage(Socketmessage*& msg) = 0;
-			virtual bool sendMessage() = 0;
-			virtual bool sendMessage(const Socketmessage* msg) = 0;
+			virtual void sendMessage(const Servicemessage*) = 0;
+			virtual void sendMessage() = 0;
 	};
+
+	struct SocketCreator {
+		static Socket* create(SOCKET s, MESSAGE_SPLITER splitMessage);
+	};
+
+	class SocketServer : public Socket {
+		public:
+			virtual ~SocketServer() = 0;
+
+		public:
+			virtual bool listen(const char* address, int port) = 0;
+	};
+
+	struct SocketServerCreator {
+		static SocketServer* create(MESSAGE_SPLITER splitMessage, Service* service);
+	};
+	
+	class SocketClient : public Socket {
+		public:
+			virtual ~SocketClient() = 0;
+			
+		public:
+			virtual bool connect(const char* address, int port, u32 timeout) = 0;
+	};
+
+	struct SocketClientCreator {
+		static SocketClient* create(MESSAGE_SPLITER splitMessage, Service* service);
+	};
+
+
+
+
 	
 	class Socket {
 		public:

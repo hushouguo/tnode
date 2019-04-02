@@ -7,6 +7,24 @@
 #define __MESSAGEQUEUE_H__
 
 BEGIN_NAMESPACE_TNODE {
+	class MessageQueue {
+		public:
+			bool empty();
+			size_t size();
+			void addMessage(Servicemessage*);
+			Servicemessage* getMessage();
+			Servicemessage* allocateMessage();
+			void releaseMessage(Servicemessage*);
+
+		public:
+			void stop();
+			void dispatch();
+
+		private:
+			LockfreeQueue<Servicemessage*> _msgQueue;
+	};
 }
+
+#define sMessageQueue tnode::Singleton<tnode::MessageQueue>::getInstance()
 
 #endif

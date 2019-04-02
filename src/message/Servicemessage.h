@@ -21,7 +21,8 @@ BEGIN_NAMESPACE_TNODE {
 #pragma pack(pop)
 
 	struct Servicemessage {
-		int source;
+		u32 from;
+		u32 to;
 		SOCKET fd;
 		Socketmessage rawmsg;
 	};

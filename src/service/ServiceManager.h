@@ -10,12 +10,13 @@ BEGIN_NAMESPACE_TNODE {
 	class ServiceManager {
 		public:
 			bool newservice(const char* entryfile);
+			Service* getService(u32 id);
 			void stop();
 			void schedule();
 			
 		private:
 			int _init_serviceid = 0;
-			std::unordered_map<int, Service*> _services;
+			std::unordered_map<u32, Service*> _services;
 	};
 }
 
