@@ -13,10 +13,11 @@ BEGIN_NAMESPACE_TNODE {
 
 		public:
 			virtual bool load(const char* filename) = 0; // filename also is directory
-			virtual bool encode(lua_State* L, const char* name, void* buf, size_t& bufsize) = 0;
-			virtual bool encode(lua_State* L, const char* name, std::string& out) = 0;
-			virtual bool decode(lua_State* L, const char* name, void* buf, size_t bufsize) = 0;
-			virtual bool decode(lua_State* L, const char* name, const std::string& in) = 0;
+			virtual bool regmsg(u32 msgid, const char* name) = 0;
+			virtual bool encode(lua_State* L, u32 msgid, void* buf, size_t& bufsize) = 0;
+			virtual bool encode(lua_State* L, u32 msgid, std::string& out) = 0;
+			virtual bool decode(lua_State* L, u32 msgid, void* buf, size_t bufsize) = 0;
+			virtual bool decode(lua_State* L, u32 msgid, const std::string& in) = 0;
 	};
 
 	struct MessageParserCreator {

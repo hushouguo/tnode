@@ -18,18 +18,19 @@ BEGIN_NAMESPACE_TNODE {
 
 		public:
 			bool load(const char* filename) override;/* filename also is directory */
+			bool regmsg(u32 msgid, const char* name) override;
 
 		public:
-			bool encode(lua_State* L, const char* name, void* buf, size_t& bufsize) override;
-			bool encode(lua_State* L, const char* name, std::string& out) override;
-			bool decode(lua_State* L, const char* name, void* buf, size_t bufsize) override;
-			bool decode(lua_State* L, const char* name, const std::string& in) override;
+			bool encode(lua_State* L, u32 msgid, void* buf, size_t& bufsize) override;
+			bool encode(lua_State* L, u32 msgid, std::string& out) override;
+			bool decode(lua_State* L, u32 msgid, void* buf, size_t bufsize) override;
+			bool decode(lua_State* L, u32 msgid, const std::string& in) override;
 
 		private:
 			DiskSourceTree _tree;
 			Importer* _in;
-			DynamicMessageFactory _factory;
-			std::unordered_map<uint32_t, Message*> _messages;
+			DynamicMessageFactory _factory;			
+			std::unordered_map<u32, Message*> _messages;
 
 			class ImporterErrorCollector : public MultiFileErrorCollector {
 				public:
@@ -45,7 +46,8 @@ BEGIN_NAMESPACE_TNODE {
 			ImporterErrorCollector _errorCollector;
 
 			bool parseProtoFile(const char* filename);
-			Message* NewMessage(const char* name);
+			Message* NewMessage(u32 msgid, const char* name);
+			Message* FindMessage(u32 msgid);
 
 		private:
 			bool encodeDescriptor(lua_State* L, Message* message, const Descriptor* descriptor, const Reflection* ref);
@@ -74,14 +76,29 @@ BEGIN_NAMESPACE_TNODE {
 		return true;
 	}
 
+	bool MessageParserInternal::regmsg(u32 msgid, const char* name) {
+		Message* message = FindOrNull(this->_messages, msgid);
+		CHECK_RETURN(message == nullptr, false, "duplicate regmsg: %d, name: %s", msgid, name);
+		message = this->NewMessage(msgid, name);
+		return message != nullptr;
+	}
 
-	Message* MessageParserInternal::NewMessage(const char* name) {
-		uint32_t id = hashString(name);
-		auto i = this->_messages.find(id);
-		if (i != this->_messages.end()) {
-			i->second->Clear();
-			return i->second;
-		}
+	Message* MessageParserInternal::FindMessage(u32 msgid) {
+		return FindOrNull(this->_messages, msgid);
+	}
+	
+	Message* MessageParserInternal::NewMessage(u32 msgid, const char* name) {
+//		uint32_t id = hashString(name);
+//		auto i = this->_messages.find(id);
+//		if (i != this->_messages.end()) {
+//			i->second->Clear();
+//			return i->second;
+//		}
+
+		Message* message = this->FindMessage(msgid);
+		if (message) {
+			return message;
+		}		
 
 		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
 		CHECK_RETURN(descriptor, nullptr, "not found descriptor for message: %s", name);
@@ -90,7 +107,7 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(prototype, nullptr, "not found prototype for message");
 
 		Message* message = prototype->New();
-		this->_messages.insert(std::make_pair(id, message));
+		this->_messages.insert(std::make_pair(msgid, message));
 
 		//Debug << "message: " << message->DebugString();
 
@@ -214,10 +231,11 @@ BEGIN_NAMESPACE_TNODE {
 		return true;
 	}
 
-	bool MessageParserInternal::encode(lua_State* L, const char* name, void* buf, size_t& bufsize) {
+	bool MessageParserInternal::encode(lua_State* L, u32 msgid, void* buf, size_t& bufsize) {
 		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
 		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", name);
-		Message* message = this->NewMessage(name);
+		//Message* message = this->NewMessage(name);
+		Message* message = this->FindMessage(msgid);
 		CHECK_RETURN(message, false, "NewMessage error");
 		assert(message->ByteSize() == 0);
 		try {
@@ -242,11 +260,12 @@ BEGIN_NAMESPACE_TNODE {
 		return true;
 	}
 
-	bool MessageParserInternal::encode(lua_State* L, const char* name, std::string& out) {
+	bool MessageParserInternal::encode(lua_State* L, u32 msgid, std::string& out) {
 		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
 		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", name);
 
-		Message* message = this->NewMessage(name);
+		//Message* message = this->NewMessage(name);
+		Message* message = this->FindMessage(msgid);
 		CHECK_RETURN(message, false, "NewMessage error");
 
 		assert(message->ByteSize() == 0);
@@ -467,11 +486,12 @@ BEGIN_NAMESPACE_TNODE {
 		return true;
 	}
 
-	bool MessageParserInternal::decode(lua_State* L, const char* name, void* buf, size_t bufsize) {
+	bool MessageParserInternal::decode(lua_State* L, u32 msgid, void* buf, size_t bufsize) {
 		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
 		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", name);
 
-		Message* message = this->NewMessage(name);
+		//Message* message = this->NewMessage(name);
+		Message* message = this->FindMessage(msgid);
 		CHECK_RETURN(message, false, "NewMessage error");
 
 		assert(message->ByteSize() == 0);
@@ -495,11 +515,12 @@ BEGIN_NAMESPACE_TNODE {
 		return true;
 	}
 
-	bool MessageParserInternal::decode(lua_State* L, const char* name, const std::string& in) {
+	bool MessageParserInternal::decode(lua_State* L, u32 msgid, const std::string& in) {
 		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
 		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", name);
 
-		Message* message = this->NewMessage(name);
+		//Message* message = this->NewMessage(name);
+		Message* message = this->FindMessage(msgid);
 		CHECK_RETURN(message, false, "NewMessage error");
 
 		assert(message->ByteSize() == 0);

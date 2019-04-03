@@ -323,16 +323,16 @@ BEGIN_NAMESPACE_TNODE {
 		return 1;
 	}
 
-
 	//
-	// void sendmsg(service, fd, msgid, userdata, msglen)
-	static int cc_sendmsg(lua_State* L) {
+	// void exitservice()
+	static int cc_exitservice(lua_State* L) {
+		//TODO: exit current service
 		return 0;
 	}
-
+	
 
 	//
-	// fd newserver(address, port, function(fd, entityid, msgid, Servicemessage))
+	// fd newserver(address, port, function(fd, entityid, msgid, Servicemessage*))
 	static int cc_newserver(lua_State* L) {
 		int args = lua_gettop(L);
 		CHECK_RETURN(args == 3, 0, "`%s` lack args: %d", __FUNCTION__, args);
@@ -341,7 +341,7 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(lua_isfunction(L, -(args - 2)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 2))));
 		
 		const char* address = lua_tostring(L, -args);
-		int port = lua_tonumber(L, -(args - 1));
+		int port = lua_tointeger(L, -(args - 1));
 		Service* service = GetService(L);
 		assert(service);		
 		SocketServer* socketServer = sNetworkManager.newserver(service->id, address, port);
@@ -360,7 +360,7 @@ BEGIN_NAMESPACE_TNODE {
 
 
 	//
-	// fd newclient(address, port, function(fd, entityid, msgid, Servicemessage))
+	// fd newclient(address, port, function(fd, entityid, msgid, Servicemessage*))
 	static int cc_newclient(lua_State* L) {
 		int args = lua_gettop(L);
 		CHECK_RETURN(args == 3, 0, "`%s` lack args: %d", __FUNCTION__, args);
@@ -386,10 +386,55 @@ BEGIN_NAMESPACE_TNODE {
 		return 1;
 	}
 
+	//
+	// void response(fd, entityid, msgid, o)
+	static int cc_response(lua_State* L) {
+		return 0;
+	}
 
 	//
-	// void response(fd, msgid, o)
-	static int cc_response(lua_State* L) {
+	// void dispatch(to, Servicemessage*)
+	static int cc_dispatch(lua_State* L) {
+		return 0;
+	}
+
+
+	//
+	// void msgfunc(msgid, function(fd, entityid, msgid, Servicemessage*))
+	static int cc_msgfunc(lua_State* L) {
+	}
+
+	//
+	// void regmsg(msgid, name)
+	static int cc_regmsg(lua_State* L) {
+		int args = lua_gettop(L);
+		CHECK_RETURN(args == 2, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
+		CHECK_RETURN(lua_isstring(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
+		Service* service = GetService(L);
+		assert(service);
+		u32 msgid = lua_tointeger(L, -args);
+		const char* name = lua_tostring(L, -(args - 1));
+		bool retval = service->messageParser().regmsg(msgid, name);
+		CHECK_RETURN(retval, 0, "regmsg: %d, %s failure", msgid, name);
+		return 0;
+	}
+
+	//
+	// void release_message(Servicemessage*)
+	static int cc_release_message(lua_State* L) {
+		int args = lua_gettop(L);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(lua_islightuserdata(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
+		void* userdata = lua_touserdata(L, -args);
+		release_message(static_cast<Servicemessage*>(userdata));
+		return 0;
+	}
+
+	//
+	// void closesocket(fd)
+	static int cc_closesocket(lua_State* L) {
+		//TODO: close socket
 		return 0;
 	}
 	
@@ -400,12 +445,17 @@ BEGIN_NAMESPACE_TNODE {
 
 		// service
 		LUA_REGISTER(L, "newservice", cc_newservice);
-		LUA_REGISTER(L, "sendmsg", cc_sendmsg);
+		LUA_REGISTER(L, "exitservice", cc_exitservice);
 
 		// network
 		LUA_REGISTER(L, "newserver", cc_newserver);
 		LUA_REGISTER(L, "newclient", cc_newclient);
 		LUA_REGISTER(L, "response", cc_response);
+		LUA_REGISTER(L, "dispatch", cc_dispatch);
+		LUA_REGISTER(L, "msgfunc", cc_msgfunc);
+		LUA_REGISTER(L, "release_message", cc_release_message);
+		LUA_REGISTER(L, "regmsg", cc_regmsg);
+		LUA_REGISTER(L, "closesocket", cc_closesocket);
 
 		// logger
 		LUA_REGISTER(L, "log_debug", cc_log_debug);
