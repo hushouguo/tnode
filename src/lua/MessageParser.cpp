@@ -106,7 +106,7 @@ BEGIN_NAMESPACE_TNODE {
 		const Message* prototype = this->_factory.GetPrototype(descriptor);
 		CHECK_RETURN(prototype, nullptr, "not found prototype for message");
 
-		Message* message = prototype->New();
+		message = prototype->New();
 		this->_messages.insert(std::make_pair(msgid, message));
 
 		//Debug << "message: " << message->DebugString();
@@ -232,15 +232,16 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	bool MessageParserInternal::encode(lua_State* L, u32 msgid, void* buf, size_t& bufsize) {
-		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
-		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", name);
-		//Message* message = this->NewMessage(name);
 		Message* message = this->FindMessage(msgid);
-		CHECK_RETURN(message, false, "NewMessage error");
+		CHECK_RETURN(message, false, "Not found message: %d", msgid);
+		message->Clear();
+
+		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(message->GetTypeName());
+		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", message->GetTypeName().c_str());
 		assert(message->ByteSize() == 0);
 		try {
 			if (!this->encodeDescriptor(L, message, descriptor, message->GetReflection())) {
-				Error << "encodeDescriptor failure for message: " << name;
+				Error << "encodeDescriptor failure for message: " << message->GetTypeName();
 				return false;
 			}
 		}
@@ -249,10 +250,10 @@ BEGIN_NAMESPACE_TNODE {
 		}
 
 		size_t byteSize = message->ByteSize();
-		CHECK_RETURN(byteSize <= bufsize, false, "bufsize: %ld(need: %ld) overflow for message: %s", bufsize, byteSize, name);
+		CHECK_RETURN(byteSize <= bufsize, false, "bufsize: %ld(need: %ld) overflow for message: %s", bufsize, byteSize, message->GetTypeName().c_str());
 
 		if (!message->SerializeToArray(buf, byteSize)) {
-			Error.cout("Serialize message:%s failure, byteSize:%ld", name, byteSize);
+			Error.cout("Serialize message:%s failure, byteSize:%ld", message->GetTypeName().c_str(), byteSize);
 			return false;
 		}
 
@@ -261,18 +262,18 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	bool MessageParserInternal::encode(lua_State* L, u32 msgid, std::string& out) {
-		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
-		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", name);
-
-		//Message* message = this->NewMessage(name);
 		Message* message = this->FindMessage(msgid);
-		CHECK_RETURN(message, false, "NewMessage error");
+		CHECK_RETURN(message, false, "Not found message: %d", msgid);
+		message->Clear();
+
+		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(message->GetTypeName());
+		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", message->GetTypeName().c_str());
 
 		assert(message->ByteSize() == 0);
 
 		try {
 			if (!this->encodeDescriptor(L, message, descriptor, message->GetReflection())) {
-				Error << "encodeDescriptor failure for message: " << name;
+				Error << "encodeDescriptor failure for message: " << message->GetTypeName();
 				return false;
 			}
 		}
@@ -283,7 +284,7 @@ BEGIN_NAMESPACE_TNODE {
 		size_t byteSize = message->ByteSize();
 
 		if (!message->SerializeToString(&out)) {
-			Error.cout("Serialize message:%s failure, byteSize:%ld", name, byteSize);
+			Error.cout("Serialize message:%s failure, byteSize:%ld", message->GetTypeName().c_str(), byteSize);
 			return false;
 		}
 
@@ -452,7 +453,7 @@ BEGIN_NAMESPACE_TNODE {
 			lua_pushstring(L, field->name().c_str());
 			lua_newtable(L);
 
-			Debug.cout("message:%s, field:%s, fieldsize:%d", message.GetTypeName().c_str(), field->name().c_str(), ref->FieldSize(message, field));
+			//Debug.cout("message:%s, field:%s, fieldsize:%d", message.GetTypeName().c_str(), field->name().c_str(), ref->FieldSize(message, field));
 
 			for (int i = 0; rc && i < ref->FieldSize(message, field); ++i) {
 				rc = this->decodeFieldRepeated(L, message, field, ref, i);
@@ -487,24 +488,24 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	bool MessageParserInternal::decode(lua_State* L, u32 msgid, void* buf, size_t bufsize) {
-		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
-		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", name);
-
-		//Message* message = this->NewMessage(name);
 		Message* message = this->FindMessage(msgid);
-		CHECK_RETURN(message, false, "NewMessage error");
+		CHECK_RETURN(message, false, "Not found message: %d", msgid);
+		message->Clear();
+
+		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(message->GetTypeName());
+		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", message->GetTypeName().c_str());
 
 		assert(message->ByteSize() == 0);
 
 		if (!message->ParseFromArray(buf, bufsize)) {
-			Error.cout("Unserialize message:%s failure, byteSize:%ld", name, bufsize);
+			Error.cout("Unserialize message:%s failure, byteSize:%ld", message->GetTypeName().c_str(), bufsize);
 			return false;
 		}
 
 		lua_newtable(L);
 		try {
 			if (!this->decodeDescriptor(L, *message, descriptor, message->GetReflection())) {
-				Error << "decodeDescriptor failure for message: " << name;
+				Error << "decodeDescriptor failure for message: " << message->GetTypeName();
 				return false;
 			}
 		}
@@ -516,24 +517,24 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	bool MessageParserInternal::decode(lua_State* L, u32 msgid, const std::string& in) {
-		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(name);
-		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", name);
-
-		//Message* message = this->NewMessage(name);
 		Message* message = this->FindMessage(msgid);
-		CHECK_RETURN(message, false, "NewMessage error");
+		CHECK_RETURN(message, false, "Not found message: %d", msgid);
+		message->Clear();
+
+		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(message->GetTypeName());
+		CHECK_RETURN(descriptor, false, "not found descriptor for message: %s", message->GetTypeName().c_str());
 
 		assert(message->ByteSize() == 0);
 
 		if (!message->ParseFromString(in)) {
-			Error.cout("Unserialize message:%s failure, byteSize:%ld", name, in.length());
+			Error.cout("Unserialize message:%s failure, byteSize:%ld", message->GetTypeName().c_str(), in.length());
 			return false;
 		}
 
 		lua_newtable(L);
 		try {
 			if (!this->decodeDescriptor(L, *message, descriptor, message->GetReflection())) {
-				Error << "decodeDescriptor failure for message: " << name;
+				Error << "decodeDescriptor failure for message: " << message->GetTypeName();
 				return false;
 			}
 		}

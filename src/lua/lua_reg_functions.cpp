@@ -111,35 +111,35 @@ BEGIN_NAMESPACE_TNODE {
 	}
 	
 	//
-	// string message_encode(name, table)
+	// string message_encode(msgid, table)
 	static int cc_message_encode(lua_State* L) {
 		int args = lua_gettop(L);
 		CHECK_RETURN(args == 2, 0, "`%s` lack args:%d", __FUNCTION__, args);
-		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
+		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		CHECK_RETURN(lua_istable(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
-		const char* name = lua_tostring(L, -args);
+		u32 msgid = lua_tointeger(L, -args);
 		Service* service = GetService(L);
 		assert(service);
 		std::string outstring;
-		bool retval = service->messageParser()->encode(L, name, outstring);
-		CHECK_RETURN(retval, 0, "encode message: %s error", name);
+		bool retval = service->messageParser()->encode(L, msgid, outstring);
+		CHECK_RETURN(retval, 0, "encode message: %d error", msgid);
 		lua_pushstring(L, outstring.c_str());
 		return 1;
 	}
 
 	//
-	// table message_decode(name, string)
+	// table message_decode(msgid, string)
 	static int cc_message_decode(lua_State* L) {
 		int args = lua_gettop(L);
 		CHECK_RETURN(args == 2, 0, "`%s` lack args:%d", __FUNCTION__, args);
-		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));			
+		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));			
 		CHECK_RETURN(lua_isstring(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));			
-		const char* name = lua_tostring(L, -args);
+		u32 msgid = lua_tointeger(L, -args);
 		std::string instring = lua_tostring(L, -(args - 1));
 		Service* service = GetService(L);
 		assert(service);
-		bool retval = service->messageParser()->decode(L, name, instring);
-		CHECK_RETURN(retval, 0, "decode message: %s error", name);
+		bool retval = service->messageParser()->decode(L, msgid, instring);
+		CHECK_RETURN(retval, 0, "decode message: %d error", msgid);
 		// table is in the top of stack
 		return 1;
 	}
@@ -402,6 +402,7 @@ BEGIN_NAMESPACE_TNODE {
 	//
 	// void msgfunc(msgid, function(fd, entityid, msgid, Servicemessage*))
 	static int cc_msgfunc(lua_State* L) {
+		return 0;
 	}
 
 	//
@@ -415,7 +416,7 @@ BEGIN_NAMESPACE_TNODE {
 		assert(service);
 		u32 msgid = lua_tointeger(L, -args);
 		const char* name = lua_tostring(L, -(args - 1));
-		bool retval = service->messageParser().regmsg(msgid, name);
+		bool retval = service->messageParser()->regmsg(msgid, name);
 		CHECK_RETURN(retval, 0, "regmsg: %d, %s failure", msgid, name);
 		return 0;
 	}

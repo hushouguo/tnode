@@ -29,5 +29,5 @@ function dump(t)
     else
         sub_dump(t,"  ")
     end
-    cc.log_trace()
+--    cc.log_trace()
 end
