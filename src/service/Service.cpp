@@ -50,7 +50,7 @@ BEGIN_NAMESPACE_TNODE {
 		}
 	}
 
-	void Service::pushMessage(Servicemessage* msg) {
+	void Service::pushMessage(const Servicemessage* msg) {
 		this->_msgQueue.push_back(msg);
 	}
 	

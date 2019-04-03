@@ -17,12 +17,12 @@ BEGIN_NAMESPACE_TNODE {
 
 		public:
 			void shutdown();
-			void run(int milliseconds);
+			void run(int milliseconds, std::function<void(SOCKET)> readfunc, std::function<void(SOCKET)> writefunc, std::function<void(SOCKET)> errorfunc);
 			
 		public:
-			bool addSocket(Socket* s);
-			bool removeSocket(Socket* s);
-			bool setSocketPollout(Socket* s, bool value);
+			bool addSocket(SOCKET s);
+			bool removeSocket(SOCKET s);
+			bool setSocketPollout(SOCKET s, bool value);
 
 		private:
 			int _epfd = -1;

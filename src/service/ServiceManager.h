@@ -13,6 +13,8 @@ BEGIN_NAMESPACE_TNODE {
 			Service* getService(u32 id);
 			void stop();
 			void schedule();
+			void schedule(Service* service);
+			void pushMessage(u32 sid, const Servicemessage* msg);
 			
 		private:
 			int _init_serviceid = 0;

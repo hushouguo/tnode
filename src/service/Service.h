@@ -37,7 +37,7 @@ BEGIN_NAMESPACE_TNODE {
 			std::list<int> _regfuncs;
 		
 		public:
-			void pushMessage(Servicemessage* msg);
+			void pushMessage(const Servicemessage* msg);
 			inline bool msgQueueEmpty() { return this->_msgQueue.empty(); }
 			inline bool inQueue() { return this->_inQueue; }
 			inline void intoQueue() { assert(this->_inQueue == false); this->_inQueue = true; }

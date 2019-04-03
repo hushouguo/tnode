@@ -24,16 +24,29 @@ BEGIN_NAMESPACE_TNODE {
 		this->_services.clear();
 	}
 
+	void ServiceManager::pushMessage(u32 sid, const Servicemessage* msg) {
+		Service* service = FindOrNull(this->_services, sid);
+		if (!service) {
+			release_message(msg);
+			CHECK_RETURN(false, void(0), "Not found service: %d", sid);
+		}
+		service->pushMessage(msg);
+		this->schedule(service);
+	}
+
+	void ServiceManager::schedule(Service* service) {
+		if (!service->msgQueueEmpty() && !service->inQueue()) {
+			service->intoQueue();
+			sThreadPool.add([](Service* service) {
+				service->run();
+				service->exitQueue();
+			}, service);
+		}
+	}
+
 	void ServiceManager::schedule() {
 		for (auto& i : this->_services) {
-			Service* service = i.second;
-			if (!service->msgQueueEmpty() && !service->inQueue()) {
-				service->intoQueue();
-				sThreadPool.add([](Service* service) {
-					service->run();
-					service->exitQueue();
-				}, service);
-			}
+			this->schedule(i.second);
 		}
 	}
 	

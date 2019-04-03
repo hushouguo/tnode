@@ -7,22 +7,16 @@
 #define __SOCKET_CLIENT_H__
 
 BEGIN_NAMESPACE_TNODE {
-	class SocketClient {
+	class SocketClient : public Socket {
 		public:
 			virtual ~SocketClient() = 0;
-			
+
 		public:
-			virtual SOCKET fd() = 0;
-			virtual bool connect(const char* address, int port, u32 timeout) = 0;
-			virtual void stop() = 0;
-			virtual bool active() = 0;
-			virtual const Socketmessage* receiveMessage() = 0;
-			virtual void sendMessage(const void*, size_t) = 0;
-			virtual void sendMessage(const Socketmessage*) = 0;
+			virtual bool connect(const char* address, int port) = 0;
 	};
 
 	struct SocketClientCreator {
-		static SocketClient* create(MESSAGE_SPLITER splitMessage);
+		static SocketClient* create(u32 owner);
 	};
 }
 

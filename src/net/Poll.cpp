@@ -15,36 +15,36 @@ BEGIN_NAMESPACE_TNODE {
 		::close(this->_epfd);
 	}
 
-	bool Poll::addSocket(Socket* s) {
-		//System << "Poll::addSocket: " << s->fd();
+	bool Poll::addSocket(SOCKET s) {
+		//System << "Poll::addSocket: " << s;
 		struct epoll_event ee;
 		ee.events = EPOLLET | EPOLLIN | EPOLLOUT | EPOLLERR;
 		ee.data.u64 = 0; /* avoid valgrind warning */
-		ee.data.ptr = s;
-		int rc = epoll_ctl(this->_epfd, EPOLL_CTL_ADD, s->fd(), &ee);		
+		ee.data.fd = s;
+		int rc = epoll_ctl(this->_epfd, EPOLL_CTL_ADD, s, &ee);		
 		CHECK_RETURN(rc == 0, false, "epoll_add error: %d, %s", errno, strerror(errno));
 		return true;
 	}
 
-	bool Poll::removeSocket(Socket* s) {
+	bool Poll::removeSocket(SOCKET s) {
 		//System << "Poll::removeSocket: " << s;
 		struct epoll_event ee;
 		ee.events = EPOLLET | EPOLLIN | EPOLLOUT | EPOLLERR;
 		ee.data.u64 = 0; /* avoid valgrind warning */
-		ee.data.ptr = s;
+		ee.data.fd = s;
 		/* Note, Kernel < 2.6.9 requires a non null event pointer even for EPOLL_CTL_DEL. */
-		int rc = epoll_ctl(this->_epfd, EPOLL_CTL_DEL, s->fd(), &ee);
+		int rc = epoll_ctl(this->_epfd, EPOLL_CTL_DEL, s, &ee);
 		CHECK_RETURN(rc == 0, false, "epoll_del error: %d, %s", errno, strerror(errno));
 		return true;
 	}
 
-	bool Poll::setSocketPollout(Socket* s, bool value) {
+	bool Poll::setSocketPollout(SOCKET s, bool value) {
 		struct epoll_event ee;
 		ee.events = value ? (EPOLLET | EPOLLIN | EPOLLOUT | EPOLLERR) : (EPOLLET | EPOLLIN | EPOLLERR);
 		ee.data.u64 = 0; /* avoid valgrind warning */
-		ee.data.ptr = s;
+		ee.data.fd = s;
 		/* Note, Kernel < 2.6.9 requires a non null event pointer even for EPOLL_CTL_DEL. */
-		int rc = epoll_ctl(this->_epfd, EPOLL_CTL_MOD, s->fd(), &ee);
+		int rc = epoll_ctl(this->_epfd, EPOLL_CTL_MOD, s, &ee);
 		CHECK_RETURN(rc == 0, false, "epoll_mod error: %d, %s, socket: %d", errno, strerror(errno), s);
 		return true;
 	}
@@ -53,7 +53,7 @@ BEGIN_NAMESPACE_TNODE {
 		SafeClose(this->_epfd); // try to wakeup this thread
 	}
 
-	void Poll::run(int milliseconds) {
+	void Poll::run(int milliseconds, std::function<void(SOCKET)> readfunc, std::function<void(SOCKET)> writefunc, std::function<void(SOCKET)> errorfunc) {
 		/* -1 to block indefinitely, 0 to return immediately, even if no events are available. */
 		int numevents = ::epoll_wait(this->_epfd, this->_events, NM_POLL_EVENT, milliseconds);
 		if (numevents < 0) {
@@ -64,26 +64,20 @@ BEGIN_NAMESPACE_TNODE {
 		}
 		for (int i = 0; i < numevents; ++i) {
 			struct epoll_event* ee = &this->_events[i];
-			Socket* s = static_cast<Socket*>(ee.data.ptr);
 			if (ee->events & (EPOLLERR | EPOLLHUP)) {
 				Error.cout("fd: %d poll error or hup: %d", ee->data.fd, ee->events);
-				//this->_slotWorker->errorSocket(ee->data.fd);
+				errorfunc(ee->data.fd);
 			}
 			else if (ee->events & EPOLLRDHUP) {
 				Error.cout("fd: %d poll error or rdhup: %d", ee->data.fd, ee->events);
-				//this->_slotWorker->errorSocket(ee->data.fd);
+				errorfunc(ee->data.fd);
 			}
 			else {
-				bool rc = true;
 				if (ee->events & EPOLLIN) {
-					if (rc) {
-						rc = s->read();
-					}
+					readfunc(ee->data.fd);
 				}
 				if (ee->events & EPOLLOUT) {
-					if (rc) {
-						rc = s->write();
-					}
+					writefunc(ee->data.fd);
 				}
 			}
 		}
