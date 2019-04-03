@@ -45,8 +45,8 @@ BEGIN_NAMESPACE_TNODE {
 			
 		private:
 			bool _inQueue = false;
-			LockfreeQueue<Servicemessage*> _msgQueue;
-			Servicemessage* getMessage();
+			LockfreeQueue<const Servicemessage*> _msgQueue;
+			const Servicemessage* getMessage();
 	};
 }
 

@@ -18,7 +18,7 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	void NetworkManager::run() {
-		this->_poll(0, 
+		this->_poll.run(0, 
 		[this](SOCKET s) { 
 			Socket* socket = this->_sockets[s];
 			CHECK_RETURN(socket, void(0), "Not found socket: %d when readSocket", s);
@@ -39,7 +39,7 @@ BEGIN_NAMESPACE_TNODE {
 				else {
 					ByteBuffer& buffer = socket->recvBuffer();
 					while (true) {
-						Socketmessage* rawmsg = buffer.rbuffer();
+						Socketmessage* rawmsg = (Socketmessage*) (buffer.rbuffer());
 						if (buffer.size() >= sizeof(rawmsg->len) && buffer.size() >= rawmsg->len) {
 							Servicemessage* newmsg = allocate_message(rawmsg->len + sizeof(Servicemessage) - sizeof(Socketmessage));
 							newmsg->from = 0;
@@ -47,7 +47,7 @@ BEGIN_NAMESPACE_TNODE {
 							newmsg->fd = s;
 							memcpy(&newmsg->rawmsg, rawmsg, rawmsg->len);
 							sServiceManager.pushMessage(newmsg->to, newmsg);
-							buffer.rbuffer.rlength(rawmsg->len);
+							buffer.rlength(rawmsg->len);
 						}
 						else { break; }
 					}
@@ -66,8 +66,8 @@ BEGIN_NAMESPACE_TNODE {
 		});
 	}
 			
-	SocketServer* NetworkManager::newserver(Service* service, const char* address, int port) {
-		SocketServer* socketServer = SocketServerCreator::create(service->id);
+	SocketServer* NetworkManager::newserver(u32 owner, const char* address, int port) {
+		SocketServer* socketServer = SocketServerCreator::create(owner);
 		bool retval = socketServer->listen(address, port);
 		if (!retval) {
 			SafeDelete(socketServer);
@@ -79,8 +79,8 @@ BEGIN_NAMESPACE_TNODE {
 		return socketServer;
 	}
 
-	SocketClient* NetworkManager::newclient(Service* service, const char* address, int port) {
-		SocketClient* socketClient = SocketClientCreator::create(service->id);
+	SocketClient* NetworkManager::newclient(u32 owner, const char* address, int port) {
+		SocketClient* socketClient = SocketClientCreator::create(owner);
 		bool retval = socketClient->connect(address, port);
 		if (!retval) {
 			SafeDelete(socketClient);

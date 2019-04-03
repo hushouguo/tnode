@@ -19,10 +19,10 @@ BEGIN_NAMESPACE_TNODE {
 			SOCKET fd() override { return this->_socket->fd(); }
 			int socket_type() override { return this->_socket->socket_type(); }
 			void socket_type(int value) override { this->_socket->socket_type(value); }			
-			u32 owner() override { return this->_socket->owner; }
+			u32 owner() override { return this->_socket->owner(); }
 			
 		public:
-			bool receive() override { return this->_socket->receive{}; }
+			bool receive() override { return this->_socket->receive(); }
 			bool send(const void* buffer, size_t len) override { return this->_socket->send(buffer, len); }
 			bool send() override { return this->_socket->send(); }
 			ByteBuffer& recvBuffer() override { return this->_socket->recvBuffer(); }
@@ -40,7 +40,6 @@ BEGIN_NAMESPACE_TNODE {
 		this->_socket->socket_type(SOCKET_CLIENT);		
 	}
 
-	Socket::~Socket() {}
 	SocketClient::~SocketClient() {}
 	SocketClientInternal::~SocketClientInternal() {
 		SafeDelete(this->_socket);

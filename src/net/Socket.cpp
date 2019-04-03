@@ -45,7 +45,7 @@ BEGIN_NAMESPACE_TNODE {
 		SafeClose(this->_fd);
 	}
 
-	bool SocketInternal::receiveMessage() {
+	bool SocketInternal::receive() {
 		size_t readlen = 960;
 		ssize_t bytes = this->readBytes(this->_rbuffer.wbuffer(readlen), readlen);
 		CHECK_RETURN(bytes >= 0, false, "readBytes error");
@@ -57,22 +57,22 @@ BEGIN_NAMESPACE_TNODE {
 		
 	bool SocketInternal::send(const void* buffer, size_t len) {
 		if (this->_wbuffer.size() == 0) {
-			ssize_t bytes = this->sendBytes(buffer, len);
+			ssize_t bytes = this->sendBytes((const Byte*)buffer, len);
 			CHECK_RETURN(bytes >= 0, false, "sendBytes error");
-			if (bytes < len) {
+			if (size_t(bytes) < len) {
 				this->_wbuffer.append((const Byte*)buffer + bytes, len - bytes);
 			}
 			return true;
 		}
-		this->_wbuffer.append(buffer, len);
-		return this->sendMessage();
+		this->_wbuffer.append((const Byte*)buffer, len);
+		return this->send();
 	}	
 
 	bool SocketInternal::send() {
 		if (this->_wbuffer.size() > 0) {
 			ssize_t bytes = this->sendBytes(this->_wbuffer.rbuffer(), this->_wbuffer.size());
 			CHECK_RETURN(bytes >= 0, false, "sendBytes error");
-			if (bytes > 0) {
+			if (size_t(bytes) > 0) {
 				this->_wbuffer.rlength(size_t(bytes));
 			}
 		}
@@ -109,7 +109,7 @@ BEGIN_NAMESPACE_TNODE {
 	// < 0: error
 	ssize_t SocketInternal::sendBytes(const Byte* buffer, size_t len) {
 		ssize_t bytes = 0;
-		while (len > bytes) {
+		while (len > size_t(bytes)) {
 			ssize_t rc = TEMP_FAILURE_RETRY(::send(this->_fd, buffer + bytes, len - bytes, MSG_DONTWAIT | MSG_NOSIGNAL));
 			if (rc == 0) {
 				//Error.cout("lost Connection:%d", this->_fd);

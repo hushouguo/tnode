@@ -6,10 +6,10 @@
 #include "tnode.h"
 
 BEGIN_NAMESPACE_TNODE {
-	Service::Service(int id) : Entry<int>(id) {
+	Service::Service(u32 id) : Entry<u32>(id) {
 	}
 
-	Service::Service(const char* name) : Entry<int>(hashString(name)) {
+	Service::Service(const char* name) : Entry<u32>(hashString(name)) {
 	}
 
 	bool Service::init(const char* entryfile) {
@@ -38,7 +38,7 @@ BEGIN_NAMESPACE_TNODE {
 
 	void Service::run() {
 		while (!this->_isstop) {
-			for (Servicemessage* msg = this->getMessage(); msg; msg = this->getMessage()) {
+			for (const Servicemessage* msg = this->getMessage(); msg; msg = this->getMessage()) {
 				// delivery msg to lua
 			}
 #if 0		
@@ -54,7 +54,7 @@ BEGIN_NAMESPACE_TNODE {
 		this->_msgQueue.push_back(msg);
 	}
 	
-	Servicemessage* Service::getMessage() {
+	const Servicemessage* Service::getMessage() {
 		return this->_msgQueue.empty() ? nullptr : this->_msgQueue.pop_front();
 	}
 }

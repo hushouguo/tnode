@@ -16,8 +16,8 @@ BEGIN_NAMESPACE_TNODE {
 		public:
 			void sendMessage(const Servicemessage* msg);
 			void closeSocket(SOCKET s, const char* reason);
-			SocketServer* newserver(Service* service, const char* address, int port);
-			SocketClient* newclient(Service* service, const char* address, int port);
+			SocketServer* newserver(u32 owner, const char* address, int port);
+			SocketClient* newclient(u32 owner, const char* address, int port);
 
 		public:
 			void run();
