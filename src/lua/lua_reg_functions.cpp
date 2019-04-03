@@ -6,25 +6,11 @@
 #include "tnode.h"
 
 BEGIN_NAMESPACE_TNODE {
-#if 0
-	static int cc_newtimer(lua_State* L) {
-		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` parameter lack: %d\n", __FUNCTION__, args);
-		CHECK_RETURN(lua_isfunction(L, -args), 0, "`%s` expect function: %s", __FUNCTION__, lua_typename(L, lua_type(L, -args)));
-		lua_pushvalue(L, -args);
-		int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-		Service* service = GetService(L);
-		assert(service);
-		service->regfunction(ref);
-		return 0;		
-	}
-#endif
-
 	//
 	// table json_decode(string)
 	static int cc_json_decode(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));	
 		size_t len = 0;
 		const char* jsonstr = lua_tolstring(L, -args, &len);
@@ -35,7 +21,7 @@ BEGIN_NAMESPACE_TNODE {
 	// string json_encode(table)
 	static int cc_json_encode(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_istable(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		ByteBuffer byteBuffer;
 		if (lua_json_parser_encode(L, &byteBuffer)) {
@@ -51,7 +37,7 @@ BEGIN_NAMESPACE_TNODE {
 	// table xml_decode(string)
 	static int cc_xml_decode(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));	
 		size_t len = 0;
 		const char* file = lua_tolstring(L, -args, &len);	
@@ -69,7 +55,7 @@ BEGIN_NAMESPACE_TNODE {
 	// int hash_string(string)
 	static int cc_hash_string(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));		
 		size_t len = 0;
 		const char* string = lua_tolstring(L, -args, &len);
@@ -88,7 +74,7 @@ BEGIN_NAMESPACE_TNODE {
 	// int random_between(int min, int max)
 	static int cc_random_between(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 2, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));		
 		CHECK_RETURN(lua_isnumber(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));		
 		lua_Integer min = lua_tointeger(L, -args);
@@ -101,7 +87,7 @@ BEGIN_NAMESPACE_TNODE {
 	// string base64_encode(string)
 	static int cc_base64_encode(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));		
 		size_t len = 0;
 		const char * string = lua_tolstring(L, -args, &len);	
@@ -115,7 +101,7 @@ BEGIN_NAMESPACE_TNODE {
 	// string base64_decode(string)
 	static int cc_base64_decode(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));			
 		std::string encoded_string = lua_tostring(L, -args);	
 		std::string decoded_string;
@@ -128,7 +114,7 @@ BEGIN_NAMESPACE_TNODE {
 	// string message_encode(name, table)
 	static int cc_message_encode(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 2, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		CHECK_RETURN(lua_istable(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
 		const char* name = lua_tostring(L, -args);
@@ -145,7 +131,7 @@ BEGIN_NAMESPACE_TNODE {
 	// table message_decode(name, string)
 	static int cc_message_decode(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 2, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));			
 		CHECK_RETURN(lua_isstring(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));			
 		const char* name = lua_tostring(L, -args);
@@ -162,7 +148,7 @@ BEGIN_NAMESPACE_TNODE {
 	// table md5(string)
 	static int cc_md5(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));	
 		size_t len = 0;
 		const char * content = lua_tolstring(L, -args, &len);
@@ -275,7 +261,7 @@ BEGIN_NAMESPACE_TNODE {
 	// void msleep(milliseconds)
 	static int cc_msleep(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		lua_Integer milliseconds = lua_tointeger(L, -1);	
 		std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));	
@@ -286,7 +272,7 @@ BEGIN_NAMESPACE_TNODE {
 	// logger
 	static int cc_log_debug(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		const char* content = lua_tostring(L, -args);
 		if (content) {
@@ -296,7 +282,7 @@ BEGIN_NAMESPACE_TNODE {
 	}
 	static int cc_log_trace(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		const char* content = lua_tostring(L, -args);
 		if (content) {
@@ -306,7 +292,7 @@ BEGIN_NAMESPACE_TNODE {
 	}
 	static int cc_log_alarm(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		const char* content = lua_tostring(L, -args);
 		if (content) {
@@ -316,7 +302,7 @@ BEGIN_NAMESPACE_TNODE {
 	}
 	static int cc_log_error(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		const char* content = lua_tostring(L, -args);
 		if (content) {
@@ -329,7 +315,7 @@ BEGIN_NAMESPACE_TNODE {
 	// bool newservice(entryfile)
 	static int cc_newservice(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args > 0, 0, "`%s` lack args: %d", __FUNCTION__, args);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args: %d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		const char* entryfile = lua_tostring(L, -args);
 		bool retval = sServiceManager.newservice(entryfile);
@@ -346,16 +332,58 @@ BEGIN_NAMESPACE_TNODE {
 
 
 	//
-	// bool listen(address, port, function(fd, entityid, msgid, Servicemessage))
-	static int cc_listen(lua_State* L) {
-		return 0;
+	// fd newserver(address, port, function(fd, entityid, msgid, Servicemessage))
+	static int cc_newserver(lua_State* L) {
+		int args = lua_gettop(L);
+		CHECK_RETURN(args == 3, 0, "`%s` lack args: %d", __FUNCTION__, args);
+		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
+		CHECK_RETURN(lua_isnumber(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
+		CHECK_RETURN(lua_isfunction(L, -(args - 2)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 2))));
+		
+		const char* address = lua_tostring(L, -args);
+		int port = lua_tonumber(L, -(args - 1));
+		Service* service = GetService(L);
+		assert(service);		
+		SocketServer* socketServer = sNetworkManager.newserver(service->id, address, port);
+		if (!socketServer) {
+			lua_pushinteger(L, -1);
+			return 1;
+		}
+
+		lua_pushvalue(L, -(args - 2));
+		int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+		service->regfunction(socketServer->fd(), ref);
+		
+		lua_pushinteger(L, socketServer->fd());
+		return 1;
 	}
 
 
 	//
-	// bool connect(address, port, function(fd, entityid, msgid, Servicemessage))
-	static int cc_connect(lua_State* L) {
-		return 0;
+	// fd newclient(address, port, function(fd, entityid, msgid, Servicemessage))
+	static int cc_newclient(lua_State* L) {
+		int args = lua_gettop(L);
+		CHECK_RETURN(args == 3, 0, "`%s` lack args: %d", __FUNCTION__, args);
+		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
+		CHECK_RETURN(lua_isnumber(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
+		CHECK_RETURN(lua_isfunction(L, -(args - 2)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 2))));
+		
+		const char* address = lua_tostring(L, -args);
+		int port = lua_tonumber(L, -(args - 1));
+		Service* service = GetService(L);
+		assert(service);
+		SocketClient* socketClient = sNetworkManager.newclient(service->id, address, port);
+		if (!socketClient) {
+			lua_pushinteger(L, -1);
+			return 1;
+		}
+
+		lua_pushvalue(L, -(args - 2));
+		int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+		service->regfunction(socketClient->fd(), ref);
+		
+		lua_pushinteger(L, socketClient->fd());
+		return 1;
 	}
 
 
@@ -375,8 +403,8 @@ BEGIN_NAMESPACE_TNODE {
 		LUA_REGISTER(L, "sendmsg", cc_sendmsg);
 
 		// network
-		LUA_REGISTER(L, "listen", cc_listen);
-		LUA_REGISTER(L, "connect", cc_connect);
+		LUA_REGISTER(L, "newserver", cc_newserver);
+		LUA_REGISTER(L, "newclient", cc_newclient);
 		LUA_REGISTER(L, "response", cc_response);
 
 		// logger

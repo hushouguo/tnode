@@ -29,12 +29,12 @@ BEGIN_NAMESPACE_TNODE {
 			MessageParser* _messageParser = nullptr;
 
 		public:
-			inline void regfunction(int ref) {
-				this->_regfuncs.push_back(ref);
+			inline void regfunction(SOCKET s, int ref) {
+				this->_regfuncs.insert(std::make_pair(s, ref));
 			}
 
 		private:
-			std::list<int> _regfuncs;
+			std::unordered_map<SOCKET, int> _regfuncs;
 		
 		public:
 			void pushMessage(const Servicemessage* msg);
