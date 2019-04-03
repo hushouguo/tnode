@@ -66,7 +66,8 @@ BEGIN_NAMESPACE_TNODE {
 			}
 		);
 
-		for (Servicemessage* msg = this->_sendQueue.pop_front(); msg; msg = this->_sendQueue.pop_front()) {
+		while (!this->_sendQueue.empty()) {
+			Servicemessage* msg = this->_sendQueue.pop_front();
 			assert(msg->fd < MAX_SOCKET);
 			Socket* socket = this->_sockets[msg->fd];
 			CHECK_ALARM(socket, "Not found socket: %d when send msg: %d", msg->fd, msg->rawmsg.msgid);
