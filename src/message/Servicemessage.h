@@ -27,8 +27,7 @@ BEGIN_NAMESPACE_TNODE {
 		Socketmessage rawmsg;
 	};
 
-	//Servicemessage* allocate_message(SOCKET, Socketmessage*);
-	Servicemessage* allocate_message(size_t size = DEF_MESSAGE_SIZE);
+	Servicemessage* allocate_message(size_t size);
 	void release_message(const Servicemessage* msg);
 	
 #if false
