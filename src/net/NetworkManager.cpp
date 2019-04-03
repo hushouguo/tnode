@@ -19,51 +19,65 @@ BEGIN_NAMESPACE_TNODE {
 
 	void NetworkManager::run() {
 		this->_poll.run(0, 
-		[this](SOCKET s) { 
-			Socket* socket = this->_sockets[s];
-			CHECK_RETURN(socket, void(0), "Not found socket: %d when readSocket", s);
-			if (socket->socket_type() == SOCKET_SERVER) {
-				SocketServer* socketServer = dynamic_cast<SocketServer*>(socket);
-				assert(socketServer);
-				for (SOCKET newfd = socketServer->accept(); newfd != -1; newfd = socketServer->accept()) {
-					Socket* newsocket = SocketCreator::create(newfd, socketServer->owner());
-					assert(this->_sockets[newfd] == nullptr);
-					this->_sockets[newfd] = newsocket;
-					this->_poll.addSocket(newfd);
-				}
-			}
-			else {
-				if (!socket->receive()) {
-					this->closeSocket(s, "recv error");
-				}
-				else {
-					ByteBuffer& buffer = socket->recvBuffer();
-					while (true) {
-						Socketmessage* rawmsg = (Socketmessage*) (buffer.rbuffer());
-						if (buffer.size() >= sizeof(rawmsg->len) && buffer.size() >= rawmsg->len) {
-							Servicemessage* newmsg = allocate_message(rawmsg->len + sizeof(Servicemessage) - sizeof(Socketmessage));
-							newmsg->from = 0;
-							newmsg->to = socket->owner();
-							newmsg->fd = s;
-							memcpy(&newmsg->rawmsg, rawmsg, rawmsg->len);
-							sServiceManager.pushMessage(newmsg->to, newmsg);
-							buffer.rlength(rawmsg->len);
-						}
-						else { break; }
+			[this](SOCKET s) { // readfunc
+				Socket* socket = this->_sockets[s];
+				CHECK_RETURN(socket, void(0), "Not found socket: %d when readSocket", s);
+				if (socket->socket_type() == SOCKET_SERVER) {
+					SocketServer* socketServer = dynamic_cast<SocketServer*>(socket);
+					assert(socketServer);
+					for (SOCKET newfd = socketServer->accept(); newfd != -1; newfd = socketServer->accept()) {
+						Socket* newsocket = SocketCreator::create(newfd, socketServer->owner());
+						assert(this->_sockets[newfd] == nullptr);
+						this->_sockets[newfd] = newsocket;
+						this->_poll.addSocket(newfd);
 					}
 				}
+				else {
+					if (!socket->receive()) {
+						this->closeSocket(s, "recv error");
+					}
+					else {
+						ByteBuffer& buffer = socket->recvBuffer();
+						while (true) {
+							Socketmessage* rawmsg = (Socketmessage*) (buffer.rbuffer());
+							if (buffer.size() >= sizeof(rawmsg->len) && buffer.size() >= rawmsg->len) {
+								Servicemessage* newmsg = allocate_message(rawmsg->len);
+								newmsg->from = 0;
+								newmsg->to = socket->owner();
+								newmsg->fd = s;
+								memcpy(&newmsg->rawmsg, rawmsg, rawmsg->len);
+								sServiceManager.pushMessage(newmsg->to, newmsg);
+								buffer.rlength(rawmsg->len);
+							}
+							else { break; }
+						}
+					}
+				}
+			},
+			[this](SOCKET s) {	// writefunc
+				Socket* socket = this->_sockets[s];
+				CHECK_RETURN(socket, void(0), "Not found socket: %d when writeSocket", s);
+				if (!socket->send()) {
+					this->closeSocket(s, "send error");
+				}
+			},
+			[this](SOCKET s) {	// errorfunc
+				this->closeSocket(s, "poll error"); 
 			}
-		},
-		[this](SOCKET s) {
-			Socket* socket = this->_sockets[s];
-			CHECK_RETURN(socket, void(0), "Not found socket: %d when writeSocket", s);
-			if (!socket->send()) {
-				this->closeSocket(s, "send error");
+		);
+
+		for (Servicemessage* msg = this->_sendQueue.pop_front(); msg; msg = this->_sendQueue.pop_front()) {
+			assert(msg->fd < MAX_SOCKET);
+			Socket* socket = this->_sockets[msg->fd];
+			CHECK_ALARM(socket, "Not found socket: %d when send msg: %d", msg->fd, msg->rawmsg.msgid);
+			if (socket) {
+				if (!socket->send(&msg->rawmsg, msg->rawmsg.len)) {
+					this->closeSocket(msg->fd, "sendQueue error");
+				}
+				// Note: socket is invalid when closeSocket
 			}
-		},
-		[this](SOCKET s) { 
-			this->closeSocket(s, "poll error"); 
-		});
+			release_message(msg);
+		}
 	}
 			
 	SocketServer* NetworkManager::newserver(u32 owner, const char* address, int port) {
@@ -94,6 +108,20 @@ BEGIN_NAMESPACE_TNODE {
 
 	void NetworkManager::sendMessage(const Servicemessage* msg) {
 		
+	}
+
+	bool NetworkManager::sendString(SOCKET s, u64 entityid, u32 msgid, std::string& outstring) {
+		assert(s < MAX_SOCKET);
+		Socket* socket = this->_sockets[s];
+		CHECK_RETURN(socket, false, "Not found socket: %d when send msg: %d", s, msgid);
+		Servicemessage* msg = allocate_message(outstring.length());
+		msg->fd = s;
+		msg->rawmsg.len = outstring.length() + sizeof(Socketmessage);
+		msg->rawmsg.msgid = msgid;
+		msg->rawmsg.entityid = entityid;
+		memcpy(msg->rawmsg.payload, outstring.data(), outstring.length());
+		this->_sendQueue.push_back(msg);
+		return true;
 	}
 
 	void NetworkManager::closeSocket(SOCKET s, const char* reason) {

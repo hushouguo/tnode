@@ -6,12 +6,11 @@
 #include "tnode.h"
 
 BEGIN_NAMESPACE_TNODE {
-	Servicemessage* allocate_message(size_t size) {
-		assert(size >= sizeof(Servicemessage));
-		return (Servicemessage *) malloc(size);
+	Servicemessage* allocate_message(size_t payload_length) {
+		return (Servicemessage *) malloc(payload_length + sizeof(Servicemessage));
 	}
 
 	void release_message(const Servicemessage* msg) {
-		SafeDelete(msg);
+		SafeFree(msg);
 	}
 }

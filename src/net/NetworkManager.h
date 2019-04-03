@@ -15,6 +15,7 @@ BEGIN_NAMESPACE_TNODE {
 		
 		public:
 			void sendMessage(const Servicemessage* msg);
+			bool sendString(SOCKET s, u64 entityid, u32 msgid, std::string& outstring);
 			void closeSocket(SOCKET s, const char* reason);
 			SocketServer* newserver(u32 owner, const char* address, int port);
 			SocketClient* newclient(u32 owner, const char* address, int port);
@@ -26,6 +27,7 @@ BEGIN_NAMESPACE_TNODE {
 		private:
 			Poll _poll;
 			Socket* _sockets[MAX_SOCKET];
+			LockfreeQueue<Servicemessage*> _sendQueue;
 	};
 }
 

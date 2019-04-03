@@ -389,6 +389,25 @@ BEGIN_NAMESPACE_TNODE {
 	//
 	// void response(fd, entityid, msgid, o)
 	static int cc_response(lua_State* L) {
+		int args = lua_gettop(L);
+		CHECK_RETURN(args == 4, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
+		CHECK_RETURN(lua_isnumber(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
+		CHECK_RETURN(lua_isnumber(L, -(args - 2)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 2))));
+		CHECK_RETURN(lua_istable(L, -(args - 3)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 3))));
+		
+		SOCKET fd = lua_tointeger(L, -args);
+		u64 entityid = lua_tointeger(L, -(args - 1));
+		u32 msgid = lua_tointeger(L, -(args - 2));
+		
+		Service* service = GetService(L);
+		assert(service);
+		
+		std::string outstring;
+		bool retval = service->messageParser()->encode(L, msgid, outstring);
+		CHECK_RETURN(retval, 0, "encode message: %d error", msgid);
+
+		sNetworkManager.sendString(fd, entityid, msgid, outstring);
 		return 0;
 	}
 
