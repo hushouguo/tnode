@@ -141,6 +141,7 @@ BEGIN_NAMESPACE_TNODE {
 		lua_call(L, 1, 0);
 	}
 
+	bool luaT_callFunction(lua_State* L, int args);
 
 	class Service;
 	class LuaState {
@@ -153,7 +154,7 @@ BEGIN_NAMESPACE_TNODE {
 			bool executeFile(const char* filename);
 
 			bool pushGlobalFunction(const char* function);
-			bool executeFunction(int args);
+//			bool executeFunction(int args);
 
 			void cleanup();
 			void dumpRootTable();
