@@ -49,77 +49,42 @@ BEGIN_NAMESPACE_TNODE {
 		lua_pushnil(L, value);
 		Error << "luaT_pushvalue template specialization failure for type: " << typeid(T).name();
 	}
-	
+
 	// boolean
-	template <> void luaT_pushvalue(lua_State* L, bool value) {
-		lua_pushboolean(L, value);
-	}
+	template <> void luaT_pushvalue(lua_State* L, bool value);
 
 	// integer
-	template <> void luaT_pushvalue(lua_State* L, s8 value) {
-		lua_pushinteger(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, s16 value) {
-		lua_pushinteger(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, s32 value) {
-		lua_pushinteger(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, s64 value) {
-		lua_pushinteger(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, u8 value) {
-		lua_pushinteger(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, u16 value) {
-		lua_pushinteger(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, u32 value) {
-		lua_pushinteger(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, u64 value) {
-		lua_pushinteger(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, long long value) {
-		lua_pushinteger(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, unsigned long long value) {
-		lua_pushinteger(L, value);
-	}
+	template <> void luaT_pushvalue(lua_State* L, s8 value);
+	template <> void luaT_pushvalue(lua_State* L, s16 value);
+	template <> void luaT_pushvalue(lua_State* L, s32 value);
+	template <> void luaT_pushvalue(lua_State* L, s64 value);
+	template <> void luaT_pushvalue(lua_State* L, u8 value);
+	template <> void luaT_pushvalue(lua_State* L, u16 value);
+	template <> void luaT_pushvalue(lua_State* L, u32 value);
+	template <> void luaT_pushvalue(lua_State* L, u64 value);
+	template <> void luaT_pushvalue(lua_State* L, long long value);
+	template <> void luaT_pushvalue(lua_State* L, unsigned long long value);
 
 	// float
-	template <> void luaT_pushvalue(lua_State* L, float value) {
-		lua_pushnumber(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, double value) {
-		lua_pushnumber(L, value);
-	}
+	template <> void luaT_pushvalue(lua_State* L, float value);
+	template <> void luaT_pushvalue(lua_State* L, double value);
 
 	// string
-	template <> void luaT_pushvalue(lua_State* L, char* value) {
-		lua_pushstring(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, const char* value) {
-		lua_pushstring(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, std::string value) {
-		lua_pushlstring(L, value.data(), value.length());
-	}
+	template <> void luaT_pushvalue(lua_State* L, char* value);
+	template <> void luaT_pushvalue(lua_State* L, const char* value);
+	template <> void luaT_pushvalue(lua_State* L, std::string value);
 
 	// lightuserdata
-	template <> void luaT_pushvalue(lua_State* L, void* value) {
-		lua_pushlightuserdata(L, value);
-	}
-	template <> void luaT_pushvalue(lua_State* L, const void* value) {
-		lua_pushlightuserdata(L, value);
-	}
-	
+	template <> void luaT_pushvalue(lua_State* L, void* value);
+	template <> void luaT_pushvalue(lua_State* L, const void* value);
+
 #define LUA_REGISTER(L, F, ROUTINE) \
 	lua_pushstring(L, F);\
 	lua_pushcfunction(L, ROUTINE);\
 	lua_rawset(L, -3);
 
-	template <typename T1 = void, typename T2 = void, typename T3 = void, typename T4 = void, typename T5 = void, typename T6 = void>
+	void luaT_callback(lua_State* L, int ref);
+	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
 	void luaT_callback(lua_State* L, int ref, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6) {
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
 		luaT_pushvalue(L, t1);
@@ -130,7 +95,7 @@ BEGIN_NAMESPACE_TNODE {
 		luaT_pushvalue(L, t6);
 		lua_call(L, 6, 0);
 	}
-	
+
 	template <typename T1, typename T2, typename T3, typename T4, typename T5>
 	void luaT_callback(lua_State* L, int ref, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5) {
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
@@ -175,12 +140,7 @@ BEGIN_NAMESPACE_TNODE {
 		luaT_pushvalue(L, t1);
 		lua_call(L, 1, 0);
 	}
-	
-	template <>
-	void luaT_callback(lua_State* L, int ref) {
-		lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
-		lua_call(L, 0, 0);
-	}
+
 
 	class Service;
 	class LuaState {

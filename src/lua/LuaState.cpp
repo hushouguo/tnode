@@ -272,4 +272,73 @@ BEGIN_NAMESPACE_TNODE {
 		}
 		return lua_typename(L, lua_type(L, idx));
 	}
+	
+	// boolean
+	template <> void luaT_pushvalue(lua_State* L, bool value) {
+		lua_pushboolean(L, value);
+	}
+
+	// integer
+	template <> void luaT_pushvalue(lua_State* L, s8 value) {
+		lua_pushinteger(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, s16 value) {
+		lua_pushinteger(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, s32 value) {
+		lua_pushinteger(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, s64 value) {
+		lua_pushinteger(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, u8 value) {
+		lua_pushinteger(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, u16 value) {
+		lua_pushinteger(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, u32 value) {
+		lua_pushinteger(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, u64 value) {
+		lua_pushinteger(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, long long value) {
+		lua_pushinteger(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, unsigned long long value) {
+		lua_pushinteger(L, value);
+	}
+
+	// float
+	template <> void luaT_pushvalue(lua_State* L, float value) {
+		lua_pushnumber(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, double value) {
+		lua_pushnumber(L, value);
+	}
+
+	// string
+	template <> void luaT_pushvalue(lua_State* L, char* value) {
+		lua_pushstring(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, const char* value) {
+		lua_pushstring(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, std::string value) {
+		lua_pushlstring(L, value.data(), value.length());
+	}
+
+	// lightuserdata
+	template <> void luaT_pushvalue(lua_State* L, void* value) {
+		lua_pushlightuserdata(L, value);
+	}
+	template <> void luaT_pushvalue(lua_State* L, const void* value) {
+		lua_pushlightuserdata(L, (void*) value);
+	}
+
+	void luaT_callback(lua_State* L, int ref) {
+		lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
+		lua_call(L, 0, 0);
+	}
 }

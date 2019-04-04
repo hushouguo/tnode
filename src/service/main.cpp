@@ -78,8 +78,8 @@ bool init_runtime_environment(int argc, char* argv[]) {
 
 	//
 	// verify lua version
-	CHECK_RETURN(sizeof(lua_Integer) == 8, "require right version for lua");
-	CHECK_RETURN(sizeof(lua_Number) == 8, "require right version for lua");
+	CHECK_RETURN(sizeof(lua_Integer) == 8, false, "require right version for lua");
+	CHECK_RETURN(sizeof(lua_Number) == 8, false, "require right version for lua");
 
 	
 	//

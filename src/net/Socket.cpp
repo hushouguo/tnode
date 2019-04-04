@@ -52,7 +52,7 @@ BEGIN_NAMESPACE_TNODE {
 		if (bytes > 0) {
 			this->_rbuffer.wlength(size_t(bytes));
 		}
-		Debug << "Socket: " << this->_fd << " receive bytes: " << bytes;
+		//Debug << "Socket: " << this->_fd << " receive bytes: " << bytes;
 		return true;	
 	}
 		
