@@ -46,7 +46,7 @@ BEGIN_NAMESPACE_TNODE {
 	template <typename T> void luaT_pushvalue(lua_State* L, T value) {
 		//assert(false);
 		//lua_pushlightuserdata(L, value);
-		lua_pushnil(L, value);
+		lua_pushnil(L);
 		Error << "luaT_pushvalue template specialization failure for type: " << typeid(T).name();
 	}
 
@@ -83,7 +83,9 @@ BEGIN_NAMESPACE_TNODE {
 	lua_pushcfunction(L, ROUTINE);\
 	lua_rawset(L, -3);
 
+	bool luaT_callFunction(lua_State* L, int args);
 	void luaT_callback(lua_State* L, int ref);
+
 	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
 	void luaT_callback(lua_State* L, int ref, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6) {
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
@@ -93,7 +95,8 @@ BEGIN_NAMESPACE_TNODE {
 		luaT_pushvalue(L, t4);
 		luaT_pushvalue(L, t5);
 		luaT_pushvalue(L, t6);
-		lua_call(L, 6, 0);
+		//lua_call(L, 6, 0);
+		luaT_callFunction(L, 6);
 	}
 
 	template <typename T1, typename T2, typename T3, typename T4, typename T5>
@@ -104,7 +107,8 @@ BEGIN_NAMESPACE_TNODE {
 		luaT_pushvalue(L, t3);
 		luaT_pushvalue(L, t4);
 		luaT_pushvalue(L, t5);
-		lua_call(L, 5, 0);
+		//lua_call(L, 5, 0);
+		luaT_callFunction(L, 5);
 	}
 	
 	template <typename T1, typename T2, typename T3, typename T4>
@@ -114,7 +118,8 @@ BEGIN_NAMESPACE_TNODE {
 		luaT_pushvalue(L, t2);
 		luaT_pushvalue(L, t3);
 		luaT_pushvalue(L, t4);
-		lua_call(L, 4, 0);
+		//lua_call(L, 4, 0);
+		luaT_callFunction(L, 4);
 	}
 	
 	template <typename T1, typename T2, typename T3>
@@ -123,7 +128,8 @@ BEGIN_NAMESPACE_TNODE {
 		luaT_pushvalue(L, t1);
 		luaT_pushvalue(L, t2);
 		luaT_pushvalue(L, t3);
-		lua_call(L, 3, 0);
+		//lua_call(L, 3, 0);
+		luaT_callFunction(L, 3);
 	}
 	
 	template <typename T1, typename T2>
@@ -131,17 +137,17 @@ BEGIN_NAMESPACE_TNODE {
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
 		luaT_pushvalue(L, t1);
 		luaT_pushvalue(L, t2);
-		lua_call(L, 2, 0);
+		//lua_call(L, 2, 0);
+		luaT_callFunction(L, 2);
 	}
 	
 	template <typename T1>
 	void luaT_callback(lua_State* L, int ref, T1 t1) {
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
 		luaT_pushvalue(L, t1);
-		lua_call(L, 1, 0);
+		//lua_call(L, 1, 0);
+		luaT_callFunction(L, 1);
 	}
-
-	bool luaT_callFunction(lua_State* L, int args);
 
 	class Service;
 	class LuaState {

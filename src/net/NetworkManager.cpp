@@ -30,7 +30,7 @@ BEGIN_NAMESPACE_TNODE {
 						assert(this->_sockets[newfd] == nullptr);
 						this->_sockets[newfd] = newsocket;
 						this->_poll.addSocket(newfd);
-						Debug << "accept connection: " << newfd;
+						//Debug << "accept connection: " << newfd;
 					}
 				}
 				else {

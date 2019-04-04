@@ -342,7 +342,8 @@ BEGIN_NAMESPACE_TNODE {
 
 	void luaT_callback(lua_State* L, int ref) {
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
-		lua_call(L, 0, 0);
+		//lua_call(L, 0, 0);
+		luaT_callFunction(L, 0);
 	}
 
 	bool luaT_callFunction(lua_State* L, int args) {
