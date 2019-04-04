@@ -278,7 +278,7 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		const char* content = lua_tostring(L, -args);
 		if (content) {
-			Debug << "[LUA] " << content;
+			System << "[LUA] " << content;
 		}
 		return 0;
 	}
@@ -288,7 +288,7 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		const char* content = lua_tostring(L, -args);
 		if (content) {
-			Trace << "[LUA] " << content;
+			System << "[LUA] " << content;
 		}
 		return 0;
 	}
@@ -298,7 +298,7 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		const char* content = lua_tostring(L, -args);
 		if (content) {
-			Alarm << "[LUA] " << content;
+			System << "[LUA] " << content;
 		}
 		return 0;
 	}
@@ -308,7 +308,10 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		const char* content = lua_tostring(L, -args);
 		if (content) {
-			Error << "[LUA] " << content;
+			lua_Debug ar;
+			lua_getstack(L, 1, &ar);
+			lua_getinfo(L, "nSl", &ar);
+			System << "[ERR] (" << ar.source << ":" << ar.currentline << ") " << content;
 		}
 		return 0;
 	}

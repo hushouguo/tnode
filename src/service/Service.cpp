@@ -25,6 +25,7 @@ BEGIN_NAMESPACE_TNODE {
 		this->_entryfile = entryfile;
 		/* run entry script file */
 		if (!luaT_execFile(this->_L, this->_entryfile.c_str())) { return false; }
+		
 		return true;
 	}
 
