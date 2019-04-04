@@ -285,6 +285,7 @@ BEGIN_NAMESPACE_TNODE {
 #include "tools/Entry.h"
 #include "tools/Manager.h"
 #include "tools/ThreadPool.h"
+#include "tools/Runnable.h"
 #include "xml/XmlParser.h"
 #include "json/json_parser.h"
 #include "logger/Easylog.h"
