@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+package NetData;
+
+enum RC {
+	RC_OK						= 0;	//操作成功
+
+	RC_DB_ERROR					= 1;	//数据库错误
+	RC_SYS_ERROR				= 2;	//系统故障
+	RC_UNEXPECT_ERROR			= 3;	//未知错误
+	RC_RECORD_ERROR				= 4;	//档案错误
+
+	RC_DUPLICATE_NAME			= 10;	//重复的角色名称
+	RC_ILLEGAL_NAME				= 11;	//不合法的角色名称
+	RC_TOO_LONG_NAME			= 12;	//角色名称超长
+	RC_TOO_SHORT_NAME			= 13;	//角色名称过短
+
+	RC_INVALID_COORD			= 20;	//无效的坐标
+}

@@ -30,6 +30,7 @@ BEGIN_NAMESPACE_TNODE {
 						assert(this->_sockets[newfd] == nullptr);
 						this->_sockets[newfd] = newsocket;
 						this->_poll.addSocket(newfd);
+						Debug << "accept connection: " << newfd;
 					}
 				}
 				else {
@@ -40,6 +41,7 @@ BEGIN_NAMESPACE_TNODE {
 						ByteBuffer& buffer = socket->recvBuffer();
 						while (true) {
 							Socketmessage* rawmsg = (Socketmessage*) (buffer.rbuffer());
+							Debug << "Socket: " << socket->fd() << ", buffer.size: " << buffer.size() << ", rawmsg->len: " << rawmsg->len;
 							if (buffer.size() >= sizeof(rawmsg->len) && buffer.size() >= rawmsg->len) {
 								Servicemessage* newmsg = allocate_message(rawmsg->len);
 								newmsg->from = 0;

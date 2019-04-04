@@ -1,0 +1,909 @@
+syntax = "proto2";
+
+package NetData;
+
+import "protocol/rc.proto";
+
+//性别枚举
+enum GENDER
+{
+	MALE							=	0;	//男
+	FEMALE							=	1;	//女
+}
+
+//属性枚举
+enum oAttrtype
+{
+	attr_int64						=	1;
+	attr_string						=	2;
+	attr_float						=	3;
+	attr_bool						=	4;
+	attr_bytes						=	5;
+};
+
+//属性值
+message oAttrvalue 
+{
+	required int32 type				=	1;
+	optional int64 value_int64		=	2;
+	optional string value_string	=	3;
+	optional float value_float		=	4;
+	optional bool value_bool		=	5;
+	optional bytes value_bytes		=	6;
+};
+
+//k/v属性
+message oAttribute
+{
+	required string name			=	1;
+	required oAttrvalue value		=	2;
+	optional uint32 index			=	3;
+};
+
+//属性同步对象
+message oObject
+{
+	optional uint64 id				=	1;
+	repeated oAttribute attrs		=	2;	//属性集合
+};
+
+//多对象属性同步
+message AttributeSync
+{
+	repeated oObject objects		=	1;	//对象列表
+};
+
+//客户端心跳包
+message Heartbeat
+{
+	optional uint64 systime			=	1;	//当前时间,单位：毫秒
+}
+
+//坐标
+message Coord
+{
+	required float x				=	1;
+	required float y				=	2;
+}
+
+//游戏内玩家信息
+message Player
+{
+	required oObject player			=	1;	//游戏内玩家必要属性
+	required Coord coord			=	2;	//坐标
+}
+
+
+//------------------------------ 客户端上行消息-----------------------------
+
+//
+// 注册登录
+//
+
+//角色创建请求
+message PlayerRegisterRequest
+{
+	optional string account			=	1;	//账号
+	optional string name			=	2;	//角色名
+	optional uint32 avatar			=	3;	//头像
+	optional GENDER gender			=	4;	//性别
+	optional bool isrobot			=	5;	//是否是机器人
+}
+
+//角色登录请求
+message PlayerLoginRequest
+{
+	optional uint64 playerid		=	1;	//角色ID
+}
+
+//随机玩家名字
+message PlayerNicknameRequest
+{
+}
+
+//
+// 匹配
+//
+
+//单人游戏请求
+message MatchSingleRequest
+{
+}
+
+//多人匹配请求
+message MatchMultipleRequest
+{
+}
+
+//加载进度
+message SceneLoadingRequest
+{
+	optional uint32 progress		=	1;	//进度:1-100
+}
+
+
+//
+// 准备就绪
+//
+message MatchReadyRequest
+{
+}
+
+
+//
+// 退出游戏
+//
+message QuitMatchRequest
+{
+}
+
+
+//
+// 移动
+//
+
+//移动请求
+message PlayerMoveRequest
+{
+	optional Coord dest				=	1;	//目的地坐标
+	optional int32 state			=	2;	//状态
+	optional uint64 timestamp		=	3;	//客户端时间戳
+}
+
+//拾取物品请求
+message PlayerPickupItemRequest
+{
+	optional uint64 itemid			=	1;	//物品ID
+}
+
+
+//使用场景物品
+message PlayerUseItemRequest
+{
+}
+
+//复活
+message PlayerReliveRequest
+{
+}
+
+//获取当前复活次数
+message PlayerReliveRetrieveRequest
+{
+}
+
+//释放旋风斩
+message PlayerReleaseSpellRequest
+{
+}
+
+//
+// 货币
+//
+
+enum MONEY_TYPE
+{
+	GOLD				=	0;	//金币
+	DIAMOND				=	1;	//钻石
+	RMB					=	2;	//人民币
+}
+
+enum MONEY_SOURCE
+{
+	SHOP				=	0;	//商城
+	MATCH_REWARD		=	1;	//比赛奖励
+	SYSTEM_PRESENT		=	2;	//系统赠送
+	RECHARGE			=	3;	//付费购买
+	GM					=	4;	//GM通道
+}
+
+message MoneyPurchaseRequest
+{
+	optional MONEY_TYPE	type		=	1;	//类型
+	optional uint32	number			=	2;	//数量 
+	optional MONEY_SOURCE source	=	3;	//途径
+}
+
+
+
+//
+// 邮箱
+//
+
+//获取邮件列表
+message MailRetrieveRequest
+{
+}
+
+//阅读邮件
+message MailReadRequest
+{
+	optional uint64 mailid			=	1;	//邮件id
+}
+
+//收取附件
+message MailAcceptAttachmentRequest
+{
+	optional uint64 mailid			=	1;	//邮件id
+}
+
+//删除邮件
+message MailDeleteRequest
+{
+	optional uint64 mailid			=	1;	//邮件id
+}
+
+
+//
+//背包
+//
+
+//获取背包数据
+message BagRetrieveRequest
+{
+}
+
+//整理背包请求
+message BagArrangeRequest
+{
+}
+
+//删除背包里物品请求
+message BagDeleteItemRequest
+{
+	optional uint64 itemid			=	1;	//物品ID
+}
+
+//使用背包里物品请求
+message BagUseItemRequest
+{
+	optional uint64 itemid			=	1;	//物品ID
+}
+
+//出售背包里物品请求
+message BagSellItemRequest
+{
+	optional uint64 itemid			=	1;	//物品ID
+}
+
+//碎片合成
+message BagFragmentComposeRequest
+{
+	optional uint64 itemid			=	1;	//物品ID
+}
+
+//换装
+message BagReplaceEquipmentRequest
+{
+	optional uint64 itemid			=	1;	//物品ID
+}
+
+
+//
+//任务
+//
+
+//获取任务完成进度列表
+message TaskScheduleRequest
+{
+	optional uint64 playerid		=	1;	//角色ID
+}
+
+//获取签到情况列表
+message SignScheduleRequest
+{
+	optional uint64 playerid		=	1;	//角色ID
+}
+
+//完成任务
+message TaskCompleteRequest
+{
+	optional uint64 playerid		=	1;	//角色ID
+	optional uint32 taskid			=	2;      //任务id
+}
+
+//完成签到
+message SignCompleteRequest
+{
+	optional uint64 playerid		=	1;	//角色ID
+	optional string date			=	2;      //日期
+}
+
+
+
+//
+//商城
+//
+
+//获取商品列表
+message ProductRetrieveRequest
+{
+}
+
+//购买商品
+message ProductPurchaseRequest
+{
+	optional uint32 baseid			=	1;	//商品编号
+	optional uint32 number			=	2;	//购买数量
+	optional MONEY_TYPE type		=	3;	//货币类型
+}
+
+//请求推荐购买
+message ProductRecommendRequest
+{
+}
+
+//
+//排行榜
+//
+
+//获取排行榜列表
+message RankRetrieveRequest
+{
+}
+
+
+enum PLATFORM {
+	IOS			=	0;
+	ANDROID		=	1;
+}
+
+enum CHANNEL {
+	OFFICIAL	=	0;
+	XY			=	1;
+	PP			=	2;
+
+	BAIDU		=	10;
+	HUAWEI		=	11;
+	ITOOLS		=	12;
+	WAN360		=	13;
+	QQ			=	14;
+	XIAOMI		=	15;
+	UC			=	16;
+	VIVO		=	17;
+	XIAO7		=	18;
+	SAMSUNG		=	19;
+	QS			=	20;
+	PLAY800		=	21;
+	OPPO		=	22;
+	MEIZU		=	23;
+	LETV		=	24;
+	LENOVO		=	25;
+	JINLI		=	26;
+	CP			=	27;
+	AIYOUXI		=	28;
+}
+
+//
+// 支付
+//
+
+message OrderBase
+{
+	required PLATFORM platid		=	1;	//平台
+	required CHANNEL channelid		=	2;	//渠道
+	required uint32 shardid			=	3;	//区服ID
+	optional uint64 playerid		=	4;	//玩家ID
+	optional string productid		=   5;	//商品id, sample: com.monster.gem.64
+	optional string prodname		=	6;	//商品名称
+	optional uint32 quantity		=	7;	//商品数量
+	optional uint32 price			=	8;	//商品单价, 单位:分
+	optional uint32 amount			=	9;	//支付总额, 单位:分
+}
+
+//购买请求
+message OrderCreateRequest
+{
+	optional OrderBase orderbase	=	1;	//订单
+	optional bool debugging			=	2;	//是否在调试
+}
+
+//取消订单请求
+message OrderCancelRequest
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional uint64 orderid			=	2;	//本地订单号
+	optional string reason			=	3;	//原因
+}
+
+//验证交易回执请求
+message OrderVerifyRequest
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional uint64 orderid			=	2;	//本地订单号
+	optional string transactioninfo	=	3;	//交易回执	
+}
+
+//------------------------------ 服务器下行消息-----------------------------
+
+//错误码
+message ErrorCode
+{
+	optional RC rc					=	1;	//返回码
+}
+
+
+//
+// 注册登录
+//
+
+
+//角色创建回应
+message PlayerRegisterResponse
+{
+	optional uint64 playerid		=	1;	//返回角色ID
+}
+
+//角色登录回应
+message PlayerLoginResponse
+{
+	optional oObject player			=	1;	//角色全部属性
+	optional uint64 systime			=	2;	//服务器当前时间
+}
+
+//角色名称随机回应
+message PlayerNicknameResponse
+{
+	optional string nickname		=	1;	//昵称
+}
+
+//加载进度
+message SceneLoadingResponse
+{
+	optional uint64 playerid		=	1;	//角色ID
+	optional uint32 progress		=	2;	//进度:1-100
+}
+
+//
+// 准备就绪
+//
+message MatchReadyResponse
+{
+	optional uint32 countdown		=	1;	//倒计时
+}
+
+
+//
+// 玩法逻辑
+//
+
+//排队通知
+message MatchQueueResponse
+{
+	repeated oObject member			=	1;	//排队中的玩家
+}
+
+//游戏开始通知
+message MatchBeginResponse
+{
+	optional uint32 sceneid			=	1;	//场景id
+	optional uint32 countdown		=	2;	//对局时长， 单位：秒
+	repeated Player member			=	3;	//参与对局的玩家
+}
+
+enum MATCH_END
+{
+	MATCH_END_TIME_EXHAUST			=	0;	//时间耗尽
+	MATCH_END_NOBODY_SURVIVE		=	1;	//无人生还
+}
+
+//
+//游戏结束通知
+message MatchEndResponse
+{
+	optional MATCH_END reason		=	1;	//结束原因
+}
+
+//比赛倒计时通知，每秒一次
+message MatchCountdownResponse
+{
+	optional uint32 countdown		=	1;	//倒计时剩余比赛时间:秒
+}
+
+
+enum PLAYER_COORD_SYNC
+{
+	PLAYER_COORD_SYNC_MOVE			=	0;	//自主移动
+	PLAYER_COORD_SYNC_PULL			=	1;	//位置纠偏
+}
+
+//移动同步
+message PlayerSyncResponse
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional Coord coord			=	2;	//玩家坐标
+	optional PLAYER_COORD_SYNC sync	=	3;	//同步方式
+	optional int32 state			=	4;	//状态
+	optional uint64 timestamp		=	5;	//客户端时间戳
+}
+
+//血量同步
+message PlayerHpResponse
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional uint32 maxhp			=	2;	//最大血量
+	optional uint32 curhp			=	3;	//当前血量
+}
+
+//震退
+message PlayerRetreatResponse
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional Coord coord			=	2;	//玩家新坐标
+}
+
+enum GRID_RULE
+{
+	GRID_RULE_TRAP					=	0;	//陷
+	GRID_RULE_DROP					=	1;	//落
+	GRID_RULE_OVERLAP				=	2;	//叠
+}
+
+enum GRID_TURN
+{
+	GRID_TURN_HORIZONTAL			=	0;	//横型
+	GRID_TURN_VERTICAL				=	1;	//竖型
+	GRID_TURN_X						=	2;	//交叉
+	GRID_TURN_TEN					=	3;	//十字
+	GRID_TURN_Z						=	4;	//之字
+	GRID_TURN_T						=	5;	//T形
+	GRID_TURN_L						=	6;	//L形
+	GRID_TURN_U						=	7;	//U形
+	GRID_TURN_SQUARE				=	8;	//方形
+	GRID_TURN_RECT					=	9;	//框
+	GRID_TURN_SLOPE					=	10;	//斜形
+}
+
+enum GRID_TURN_DIR
+{
+	DIR_LEFT						=	1;	//左
+	DIR_RIGHT						=	2;	//右
+	DIR_UP							=	3;	//上
+	DIR_BOTTOM						=	4;	//下
+}
+
+//格子翻转
+message GridTurnResponse
+{
+	optional GRID_RULE rule			=	1;	//翻转规则
+	optional GRID_TURN turn			=	2;	//翻转方式
+	optional uint32 countdown		=	3;	//生效倒计时的时间，单位：毫秒
+	repeated Coord coords			=	4;	//参与翻转的格子	
+	optional GRID_TURN_DIR dir		=	5;	//翻转方向, 翻转使用	
+}
+
+//火炮准备
+message GunPrepareResponse
+{
+	repeated Coord coords			=	1;	//被炮击的格子
+}
+
+//火炮发射
+message GunFireResponse
+{
+	repeated Coord coords			=	1;	//被炮击的格子
+}
+
+//物品刷新
+message SceneSpawnItemResponse
+{
+	optional Coord coord			=	1;	//坐标
+	optional oObject item			=	2;	//物品对象
+}
+
+//物品刷新落地
+message SceneSpawnItemFinishResponse
+{
+	optional uint64 itemid			=	1;	//刷新的物品的ID
+	optional bool result			=	2;	//是否落地成功
+}
+
+//物品拾取
+message ScenePickupItemResponse
+{
+	optional bool rc				=	1;	//是否拾取成功
+	optional uint64 playerid		=	2;	//玩家ID
+	optional oObject item			=	3;	//物品对象
+	optional Coord coord			=	4;	//物品坐标
+}
+
+//物品使用结果
+message SceneUseItemResponse
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional oObject item			=	2;	//物品对象
+}
+
+//销毁物品
+message SceneDestroyItemResponse
+{
+	optional uint64 itemid			=	1;	//物品ID
+	optional Coord coord			=	2;	//物品坐标
+}
+
+//旋风斩效果
+message SceneReleaseSpellResponse
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional bool start				=	2;	//true: 开启, false:关闭  
+}
+
+
+//玩家状态
+enum PLAYER_STATE
+{
+	PLAYER_STATE_NORMAL				=	0;	//正常状态
+	PLAYER_STATE_FROZEN				=	1;	//冰冻状态
+	PLAYER_STATE_SPECIAL_SPEED		=	2;	//变速状态
+	PLAYER_STATE_PUZZLE				=	3;	//迷惑状态
+	PLAYER_STATE_VERTIGO			=	4;	//眩晕状态
+}
+
+//玩家状态通知
+message PlayerStateResponse
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional PLAYER_STATE state		=	2;	//玩家状态
+	optional float value			=	3;	//状态参数
+	optional uint32 duration		=	4;	//持续时间,单位：毫秒
+	optional Coord coord			=	5;	//当前坐标
+}
+
+//玩家死亡
+message PlayerDeathResponse
+{
+	optional uint64 playerid		=	1;	//玩家ID
+}
+
+enum PLAYER_RELIVE
+{
+	PLAYER_RELIVE_FREE				=	0;	//免费复活 
+	PLAYER_RELIVE_PAY				=	1;	//付费复活
+}
+
+//玩家复活
+message PlayerReliveResponse
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional PLAYER_RELIVE relive	=	2;	//复活方式
+	optional Coord coord			=	3;	//当前坐标
+}
+
+//返回玩家累积复活次数
+message PlayerReliveRetrieveResponse
+{
+	optional uint32 times			=	1;	//累积次数
+}
+
+//结束无敌状态
+message PlayerUndeadResponse
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional bool state				=	2;	//true: 开启无敌状态, false: 结束无敌状态	
+}
+
+//玩家能量豆更新
+message PlayerEnergyBeanResponse
+{
+	optional uint32 energybean		=	1;	//能量豆
+	optional uint32 energybean_threshold = 2;//释放旋风斩所需能量豆
+}
+
+//玩家战绩
+message PlayerScore
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional bool is_survival		=	2;	//是否还幸存
+	optional uint32 point			=	3;	//得分
+	optional uint32 rank			=	4;	//排名
+	optional uint32 survival_time	=	5;	//存活时间，单位：秒
+	optional uint32 pickup_item		=	6;	//获得物品数量
+	optional uint32 delivery_revive	=	7;	//释放复活物品数量
+	optional uint32 delivery_item	=	8;	//释放物品数量
+}
+
+//战况
+message ScenePlayerScoreResponse
+{
+	optional uint64 match_time		=	1;	//对局时间
+	optional uint32 cost_time		=	2;	//对局耗时,单位：秒
+	repeated PlayerScore member		=	3;	//榜单
+}
+
+//道具奖励
+message RewardItem
+{
+	optional uint32 baseid			=	1;	//物品基础编号
+	optional uint32 number			=	2;	//物品数量
+}
+
+//比赛奖励
+message MatchRewardResponse
+{
+	optional uint32 point			=	1;	//得分
+	optional uint32 gold			=	2;	//金币
+	optional uint32 diamond			=	3;	//钻石
+	repeated RewardItem items		=	4;	//物品
+}
+
+
+//
+//邮件
+//
+
+//附件
+message Attachment
+{
+	optional uint32 gold			=	1;	//金币
+	optional uint32 diamond			=	2;	//钻石
+	repeated oObject items			=	3;	//物品
+}
+
+//邮件
+message PlayerMail
+{
+	optional oObject part			=	1;	//邮件主体
+	optional Attachment attachment	=	2;	//附件
+}
+
+//返回邮件列表
+message MailRetrieveResponse
+{
+	repeated PlayerMail mails		=	1;	//邮件列表
+}
+
+//新邮件提醒
+message MailNewRemindResponse
+{
+	optional uint32 number			=	1;	//新邮件数量
+}
+
+
+//
+//背包
+//
+
+//返回背包里物品的数据，一个或多个物品有变化都会通过这条协议来同步
+message BagSyncItemResponse
+{
+	repeated oObject items			=	1;	//一个或多个物品
+}
+
+//背包里销毁物品返回，删除，丢弃或者出售，或者被使用
+message BagDeleteItemResponse
+{
+	optional uint64 itemid			=	1;	//物品ID
+}
+
+//收取附件
+message MailAcceptAttachmentResponse
+{
+	optional uint64 mailid			=	1;	//邮件id
+	optional bool   rc				=	2;	//是否收取附件成功
+}
+
+
+//
+//任务
+//
+//获取任务完成进度列表
+message TaskScheduleResponse
+{
+	repeated TASK task		=	1;	//任务列表
+}
+
+message TASK
+{
+	optional uint32 taskid   =   1;   //任务ID
+	optional string content  =	 2;	  //任务描述
+	optional uint32 times    =	 3;	  //已完成次数
+	optional uint32 maxtimes =   4;	  //需要完成次数
+	optional uint32 isget		 =   5;   //是否已领取奖励
+	optional Attachment taskreward	=	6;	//奖励
+	optional string category =	7;		//任务类别
+}
+
+
+message TASKLIST
+{
+	repeated TASK task	=    1;		//任务
+}
+
+message SIGN
+{
+	optional uint32 index	  	=   	1;    //
+	optional string signdate 	=	2;	  //签到日期
+	optional string content   	=	3;	  //已完成次数
+	optional uint32 isget		=   	4;   //是否已领取奖励
+	optional Attachment signreward	=	5;	//奖励
+}
+
+
+//获取签到列表
+message SignScheduleResponse
+{
+	repeated SIGN sign		=	1;	//签到
+}
+
+//完成任务
+message TaskCompleteResponse
+{
+	optional bool rc			    =	1;  //是否领取成功
+	optional uint32 taskid			=	2;      //任务id
+}
+
+//完成
+message SignCompleteResponse
+{
+	optional bool rc			    =	1;  //是否领取成功
+}
+
+
+//
+//商城
+//
+
+message Product
+{
+	optional uint32 baseid			=	1;	//物品ID
+	optional string name			=	2;	//名称
+	optional string desc			=	3;	//描述
+	optional uint32 price_gold		=	4;	//金币价格
+	optional uint32 price_diamond	=	5;	//钻石价格
+}
+
+//商品信息同步, 商品信息有变化，重新刷新商品列表
+message ProductSyncResponse
+{
+	repeated Product products		=	1;	//一个或多个物品
+}
+
+//商品购买回复
+message ProductPurchaseResponse
+{
+	optional bool result			=	1;	//购买是否成功
+	optional uint64 cost_gold		=	2;	//花费金币
+	optional uint64 cost_diamond	=	3;	//花费钻石
+}
+
+//推荐购买
+message ProductRecommendResponse
+{
+	optional uint32 baseid			=	1;	//商品编号
+}
+
+
+//
+//排行榜
+//
+
+//返回排行榜列表
+message RankRetrieveResponse
+{
+	repeated oObject ranklist		=	1;	//列表
+}
+
+
+
+//
+// 支付
+//
+
+//返回本地订单
+message OrderCreateResponse
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional string productid		=   2;	//商品id
+	optional uint64 orderid			=	3;	//本地订单号,0:失败的订单
+}
+
+//购买结果通知
+message OrderVerifyResponse
+{
+	optional uint64 playerid		=	1;	//玩家ID
+	optional uint64 orderid			=	2;	//本地订单号
+	optional string productid		=   3;	//商品id, sample: com.monster.gem.64
+	optional uint32 quantity		=	4;	//商品数量
+	optional bool result			=	5;	//购买结果
+}
+

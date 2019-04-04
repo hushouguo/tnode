@@ -40,6 +40,25 @@ BEGIN_NAMESPACE_TNODE {
 		while (!this->_isstop) {
 			for (const Servicemessage* msg = this->getMessage(); msg; msg = this->getMessage()) {
 				// delivery msg to lua
+				auto i = this->_msgfuncs.find(msg->rawmsg.msgid);
+				if (i == this->_msgfuncs.end()) {
+					Error << "Not register msgid: " << msg->rawmsg.msgid << ", service: " << this->id;
+					release_message(msg);
+				}
+				else {
+					int ref = i->second;
+					Debug << "call lua function: " << ref;
+#if 0
+					lua_pushinteger(this->_luaState->luaState(), msg->fd);
+					lua_pushinteger(this->_luaState->luaState(), msg->rawmsg.entityid);
+					lua_pushinteger(this->_luaState->luaState(), msg->rawmsg.msgid);
+					lua_pushlightuserdata(this->_luaState->luaState(), (void*)msg);
+					this->_luaState->callFunction(ref, 4);
+#else
+					//lua_pushinteger(this->_luaState->luaState(), msg->fd);
+					this->_luaState->callFunction(ref, 1);
+#endif					
+				}
 			}
 #if 0		
 			int ref = this->_funcs.front();

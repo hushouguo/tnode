@@ -34,6 +34,7 @@ BEGIN_NAMESPACE_TNODE {
 			}
 
 			inline void msgfunction(u32 msgid, int ref) {
+				Debug << "reg msg: " << msgid << ", ref: " << ref;
 				this->_msgfuncs.insert(std::make_pair(msgid, ref));
 			}
 

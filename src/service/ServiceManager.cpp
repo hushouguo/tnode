@@ -49,8 +49,10 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	void ServiceManager::schedule() {
-		for (auto& i : this->_services) {
-			this->schedule(i.second);
+		for (auto service : this->_services) {
+			if (service != nullptr) {
+				this->schedule(service);
+			}
 		}
 	}
 	

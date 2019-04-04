@@ -58,7 +58,7 @@ BEGIN_NAMESPACE_TNODE {
 			bool executeString(const char* codes);
 			bool executeFile(const char* filename);
 
-			bool callFunction(int ref);	
+			bool callFunction(int ref, int nargs);	
 			bool pushGlobalFunction(const char* function);
 			bool executeFunction(int args);
 

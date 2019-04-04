@@ -231,9 +231,10 @@ BEGIN_NAMESPACE_TNODE {
 		}
 	}
 	
-	bool LuaState::callFunction(int ref) {
+	bool LuaState::callFunction(int ref, int nargs) {
 		lua_rawgeti(this->luaState(), LUA_REGISTRYINDEX, ref); //overwrite Lua registry entry with what?
-		lua_call(this->luaState(), 0, 0);
+		lua_pushinteger(this->luaState(), 100);
+		lua_call(this->luaState(), nargs, 0);
 		return true;
 	}
 
