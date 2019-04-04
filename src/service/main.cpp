@@ -77,6 +77,12 @@ bool init_runtime_environment(int argc, char* argv[]) {
 	Trace.cout("stack size: %u (limit.stack_size), max files: %u (limit.max_files)", getStackSizeLimit(), getOpenFilesLimit());
 
 	//
+	// verify lua version
+	CHECK_RETURN(sizeof(lua_Integer) == 8, "require right version for lua");
+	CHECK_RETURN(sizeof(lua_Number) == 8, "require right version for lua");
+
+	
+	//
 	// install signal handler
 	//
 	struct sigaction act;

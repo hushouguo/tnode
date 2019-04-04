@@ -38,34 +38,18 @@ BEGIN_NAMESPACE_TNODE {
 
 	void Service::run() {
 		while (!this->_isstop) {
-			for (const Servicemessage* msg = this->getMessage(); msg; msg = this->getMessage()) {
-				// delivery msg to lua
+			for (const Servicemessage* msg = this->getMessage(); msg; msg = this->getMessage()) {				
 				auto i = this->_msgfuncs.find(msg->rawmsg.msgid);
 				if (i == this->_msgfuncs.end()) {
 					Error << "Not register msgid: " << msg->rawmsg.msgid << ", service: " << this->id;
 					release_message(msg);
 				}
-				else {
+				else { // delivery msg to lua
 					int ref = i->second;
-					Debug << "call lua function: " << ref;
-#if 0
-					lua_pushinteger(this->_luaState->luaState(), msg->fd);
-					lua_pushinteger(this->_luaState->luaState(), msg->rawmsg.entityid);
-					lua_pushinteger(this->_luaState->luaState(), msg->rawmsg.msgid);
-					lua_pushlightuserdata(this->_luaState->luaState(), (void*)msg);
-					this->_luaState->callFunction(ref, 4);
-#else
-					//lua_pushinteger(this->_luaState->luaState(), msg->fd);
-					this->_luaState->callFunction(ref, 1);
-#endif					
+					luaT_callback(this->_luaState->luaState(), 
+						ref, msg->fd, msg->rawmsg.entityid, msg->rawmsg.msgid, (const void*)msg);
 				}
 			}
-#if 0		
-			int ref = this->_funcs.front();
-			this->_funcs.pop_front();
-			Debug << "call function: " << ref;
-			this->_luaState->callFunction(ref);
-#endif			
 		}
 	}
 
