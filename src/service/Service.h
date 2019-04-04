@@ -7,7 +7,7 @@
 #define __SERVICE_H__
 
 BEGIN_NAMESPACE_TNODE {
-	class Service : public Entry<u32> {
+	class Service : public Entry<u32>, public Runnable {
 		public:
 			Service(u32 id);
 			Service(const char* name);
@@ -20,7 +20,7 @@ BEGIN_NAMESPACE_TNODE {
 		public:
 			bool init(const char* entryfile);
 			void stop();
-			void run();
+			void run() override;
 
 		private:
 			bool _isstop = false;
@@ -33,18 +33,19 @@ BEGIN_NAMESPACE_TNODE {
 				this->_regfuncs.insert(std::make_pair(s, ref));
 			}
 
+			inline void msgfunction(u32 msgid, int ref) {
+				this->_msgfuncs.insert(std::make_pair(msgid, ref));
+			}
+
 		private:
 			std::unordered_map<SOCKET, int> _regfuncs;
+			std::unordered_map<u32, int> _msgfuncs;
 		
 		public:
 			void pushMessage(const Servicemessage* msg);
 			inline bool msgQueueEmpty() { return this->_msgQueue.empty(); }
-			inline bool inQueue() { return this->_inQueue; }
-			inline void intoQueue() { assert(this->_inQueue == false); this->_inQueue = true; }
-			inline void exitQueue() { assert(this->_inQueue == true); this->_inQueue = false; }
 			
 		private:
-			bool _inQueue = false;
 			LockfreeQueue<const Servicemessage*> _msgQueue;
 			const Servicemessage* getMessage();
 	};

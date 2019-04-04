@@ -6,19 +6,26 @@
 #ifndef __SERVICEMANAGER_H__
 #define __SERVICEMANAGER_H__
 
+#define MAX_SERVICE		512
+
 BEGIN_NAMESPACE_TNODE {
 	class ServiceManager {
 		public:
+			ServiceManager();
+			
+			// multi-thread exclusion
+		public:
+			bool pushMessage(u32 sid, const Servicemessage* msg);
+		
 			bool newservice(const char* entryfile);
 			Service* getService(u32 id);
 			void stop();
 			void schedule();
 			void schedule(Service* service);
-			void pushMessage(u32 sid, const Servicemessage* msg);
 			
 		private:
 			int _init_serviceid = 0;
-			std::unordered_map<u32, Service*> _services;
+			Service* _services[MAX_SERVICE];
 	};
 }
 

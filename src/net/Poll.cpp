@@ -12,7 +12,7 @@ BEGIN_NAMESPACE_TNODE {
 	}
 		
 	Poll::~Poll() {
-		::close(this->_epfd);
+		this->shutdown();
 	}
 
 	bool Poll::addSocket(SOCKET s) {

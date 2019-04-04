@@ -9,19 +9,19 @@
 #define MAX_SOCKET		65536
 
 BEGIN_NAMESPACE_TNODE {
-	class NetworkManager {
+	class NetworkManager : public Runnable {
 		public:
 			NetworkManager();
-		
+
+			// multi-thread exclusion
 		public:
-			void sendMessage(const Servicemessage* msg);
 			bool sendString(SOCKET s, u64 entityid, u32 msgid, std::string& outstring);
 			void closeSocket(SOCKET s, const char* reason);
-			SocketServer* newserver(u32 owner, const char* address, int port);
-			SocketClient* newclient(u32 owner, const char* address, int port);
+			SOCKET newserver(u32 owner, const char* address, int port);
+			SOCKET newclient(u32 owner, const char* address, int port);
 
-		public:
-			void run();
+		public:			
+			void run() override;
 			void stop();
 
 		private:

@@ -81,34 +81,32 @@ BEGIN_NAMESPACE_TNODE {
 		}
 	}
 			
-	SocketServer* NetworkManager::newserver(u32 owner, const char* address, int port) {
+	SOCKET NetworkManager::newserver(u32 owner, const char* address, int port) {
 		SocketServer* socketServer = SocketServerCreator::create(owner);
 		bool retval = socketServer->listen(address, port);
 		if (!retval) {
 			SafeDelete(socketServer);
-			return nullptr;
+			return -1;
 		}
+		assert(socketServer->fd() < MAX_SOCKET);
 		assert(this->_sockets[socketServer->fd()] == nullptr);
 		this->_sockets[socketServer->fd()] = socketServer;
 		this->_poll.addSocket(socketServer->fd());
-		return socketServer;
+		return socketServer->fd();
 	}
 
-	SocketClient* NetworkManager::newclient(u32 owner, const char* address, int port) {
+	SOCKET NetworkManager::newclient(u32 owner, const char* address, int port) {
 		SocketClient* socketClient = SocketClientCreator::create(owner);
 		bool retval = socketClient->connect(address, port);
 		if (!retval) {
 			SafeDelete(socketClient);
-			return nullptr;
+			return -1;
 		}
+		assert(socketClient->fd() < MAX_SOCKET);
 		assert(this->_sockets[socketClient->fd()] == nullptr);
 		this->_sockets[socketClient->fd()] = socketClient;
 		this->_poll.addSocket(socketClient->fd());
-		return socketClient;
-	}
-
-	void NetworkManager::sendMessage(const Servicemessage* msg) {
-		
+		return socketClient->fd();
 	}
 
 	bool NetworkManager::sendString(SOCKET s, u64 entityid, u32 msgid, std::string& outstring) {
