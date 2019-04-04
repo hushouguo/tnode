@@ -11,11 +11,14 @@
 10. test multi-thread exclusion
 11. check schedule, spacial for NetworkManager
 12. how to cleanup resource when system halt
-13. receive signal to exit
+
 14. db agent
 15. remains lua apis
 16. next monday, debug communicate with client
-17. 
+17. load static table
+18. hotfix
+19. 把主线程的任务也做成service，主线程
+20. NetworkManager::run, while(true)死循环，阻塞，知道信号量唤醒
 
 ServiceManager			NetworkManager
 Service                 Socket
