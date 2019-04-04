@@ -95,7 +95,6 @@ BEGIN_NAMESPACE_TNODE {
 		luaT_pushvalue(L, t4);
 		luaT_pushvalue(L, t5);
 		luaT_pushvalue(L, t6);
-		//lua_call(L, 6, 0);
 		luaT_callFunction(L, 6);
 	}
 
@@ -107,7 +106,6 @@ BEGIN_NAMESPACE_TNODE {
 		luaT_pushvalue(L, t3);
 		luaT_pushvalue(L, t4);
 		luaT_pushvalue(L, t5);
-		//lua_call(L, 5, 0);
 		luaT_callFunction(L, 5);
 	}
 	
@@ -118,7 +116,6 @@ BEGIN_NAMESPACE_TNODE {
 		luaT_pushvalue(L, t2);
 		luaT_pushvalue(L, t3);
 		luaT_pushvalue(L, t4);
-		//lua_call(L, 4, 0);
 		luaT_callFunction(L, 4);
 	}
 	
@@ -128,7 +125,6 @@ BEGIN_NAMESPACE_TNODE {
 		luaT_pushvalue(L, t1);
 		luaT_pushvalue(L, t2);
 		luaT_pushvalue(L, t3);
-		//lua_call(L, 3, 0);
 		luaT_callFunction(L, 3);
 	}
 	
@@ -137,7 +133,6 @@ BEGIN_NAMESPACE_TNODE {
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
 		luaT_pushvalue(L, t1);
 		luaT_pushvalue(L, t2);
-		//lua_call(L, 2, 0);
 		luaT_callFunction(L, 2);
 	}
 	
@@ -145,7 +140,6 @@ BEGIN_NAMESPACE_TNODE {
 	void luaT_callback(lua_State* L, int ref, T1 t1) {
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
 		luaT_pushvalue(L, t1);
-		//lua_call(L, 1, 0);
 		luaT_callFunction(L, 1);
 	}
 
@@ -159,8 +153,6 @@ BEGIN_NAMESPACE_TNODE {
 			bool executeString(const char* codes);
 			bool executeFile(const char* filename);
 
-			bool pushGlobalFunction(const char* function);
-//			bool executeFunction(int args);
 
 			void cleanup();
 			void dumpRootTable();

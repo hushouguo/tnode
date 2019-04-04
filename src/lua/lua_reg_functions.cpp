@@ -485,10 +485,8 @@ BEGIN_NAMESPACE_TNODE {
 		return 0;
 	}
 	
-	void lua_reg_standard_functions(LuaState* luaState) {
-		lua_State* L = luaState->luaState();
-
-		luaState->beginNamespace(LUA_REGISTER_NAMESPACE);
+	void luaT_reg_functions(lua_State* L) {
+		luaT_beginNamespace(L, LUA_REGISTER_NAMESPACE);
 
 		// service
 		LUA_REGISTER(L, "newservice", cc_newservice);
@@ -550,6 +548,6 @@ BEGIN_NAMESPACE_TNODE {
 		//TODO: curl
 		//TODO: db agent
 		
-		luaState->endNamespace();
+		luaT_endNamespace(L);
 	}
 }

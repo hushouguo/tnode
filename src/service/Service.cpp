@@ -19,20 +19,19 @@ BEGIN_NAMESPACE_TNODE {
 		this->_messageParser = MessageParserCreator::create();
 		bool retval = this->_messageParser->load(proto_dir);
 		CHECK_RETURN(retval, false, "load protocol: %s error", proto_dir);
-		
-		SafeDelete(this->_luaState);
-		this->_luaState = new LuaState(this);		
+
+		this->_L = luaT_newstate(this->id);
 		this->_entryfile = entryfile;
 		/* run entry script file */
-		if (!this->_luaState->executeFile(this->_entryfile.c_str())) { return false; }		
+		if (!luaT_execFile(this->_L, this->_entryfile.c_str())) { return false; }
 		return true;
 	}
 
 	void Service::stop() {
 		if (!this->_isstop) {
 			this->_isstop = true;
-			SafeDelete(this->_luaState);
 			SafeDelete(this->_messageParser);
+			luaT_close(this->_L);
 		}
 	}
 
@@ -46,8 +45,8 @@ BEGIN_NAMESPACE_TNODE {
 				}
 				else { // delivery msg to lua
 					int ref = i->second;
-					luaT_callback(this->_luaState->luaState(), 
-						ref, msg->fd, msg->rawmsg.entityid, msg->rawmsg.msgid, (const void*)msg);
+					luaT_getRegistry(this->_L, ref);
+					luaT_callFunction(this->_L, msg->fd, msg->rawmsg.entityid, msg->rawmsg.msgid, (const void*)msg);
 				}
 			}
 		}

@@ -1,5 +1,5 @@
 /*
- * \file: lua_json_parser.cpp
+ * \file: luaT_json_parser.cpp
  * \brief: Created by hushouguo at Nov 06 2014 18:20:14
  */
 
@@ -14,17 +14,17 @@ BEGIN_NAMESPACE_TNODE {
 		JPS_IN_TABLE
 	} json_paser_state;
 
-	typedef struct lua_json_parser_ctx {
+	typedef struct luaT_json_parser_ctx {
 		lua_State*					L;
 		int                     	key_lvl;
 		json_paser_state        	cur_state;
 		std::stack<char>*			state_stack;
 		int							array_idx;
 		std::stack<char>*			array_stack;
-	} lua_json_parser_ctx_t;
+	} luaT_json_parser_ctx_t;
 
-	lua_json_parser_ctx_t* lua_json_parser_ctx_create(lua_State* _L) {
-		lua_json_parser_ctx_t* ctx = (lua_json_parser_ctx_t*)malloc(sizeof(lua_json_parser_ctx_t));
+	luaT_json_parser_ctx_t* luaT_json_parser_ctx_create(lua_State* _L) {
+		luaT_json_parser_ctx_t* ctx = (luaT_json_parser_ctx_t*)malloc(sizeof(luaT_json_parser_ctx_t));
 		ctx->L = _L;
 		ctx->key_lvl = 0;
 		ctx->cur_state = JPS_NONE;
@@ -34,7 +34,7 @@ BEGIN_NAMESPACE_TNODE {
 		return ctx;
 	}
 
-	void lua_json_parser_ctx_delete(lua_json_parser_ctx_t* ctx) {
+	void luaT_json_parser_ctx_delete(lua_json_parser_ctx_t* ctx) {
 		SafeDelete(ctx->state_stack);
 		SafeDelete(ctx->array_stack);
 		SafeFree(ctx);
@@ -83,7 +83,7 @@ BEGIN_NAMESPACE_TNODE {
 
 	int _json_parser_cb(void* ctx, int type, const JSON_value* value) {
 		int ret = 1;
-		lua_json_parser_ctx_t* jpctx = (lua_json_parser_ctx_t*)ctx;
+		luaT_json_parser_ctx_t* jpctx = (luaT_json_parser_ctx_t*)ctx;
 
 		//Trace.cout("begin state_stack size:%ld, array_stack size:%ld, type:%d", jpctx->state_stack->size(), jpctx->array_stack->size(), type);
 
@@ -313,10 +313,10 @@ BEGIN_NAMESPACE_TNODE {
 		return ret;
 	}
 
-	bool lua_json_parser_decode(lua_State* L, const char* jsonstr, unsigned int len) {
+	bool luaT_json_parser_decode(lua_State* L, const char* jsonstr, unsigned int len) {
 		unsigned int i;
 		int oldtop = lua_gettop(L);
-		lua_json_parser_ctx_t* ctx = lua_json_parser_ctx_create(L);
+		luaT_json_parser_ctx_t* ctx = luaT_json_parser_ctx_create(L);
 		JSON_config config;
 		struct JSON_parser_struct* jc = NULL;
 
@@ -339,7 +339,7 @@ BEGIN_NAMESPACE_TNODE {
 			if (!JSON_parser_char(jc, jsonstr[i])) {
 				Error.cout("JSON_parser_char: syntax error, byte: %d, %s", i, jsonstr);
 				delete_JSON_parser(jc);
-				lua_json_parser_ctx_delete(ctx);
+				luaT_json_parser_ctx_delete(ctx);
 				lua_settop(L, oldtop);
 				return false;
 			}
@@ -348,13 +348,13 @@ BEGIN_NAMESPACE_TNODE {
 		if (!JSON_parser_done(jc)) {
 			Error << "JSON_parser_end: syntax error: " << jsonstr;
 			delete_JSON_parser(jc);
-			lua_json_parser_ctx_delete(ctx);
+			luaT_json_parser_ctx_delete(ctx);
 			lua_settop(L, oldtop);
 			return false;
 		}
 
 		delete_JSON_parser(jc);
-		lua_json_parser_ctx_delete(ctx);
+		luaT_json_parser_ctx_delete(ctx);
 
 		return true;
 	}
@@ -510,7 +510,7 @@ BEGIN_NAMESPACE_TNODE {
 		//byteBuffer->append('\0');
 	}
 
-	bool lua_json_parser_dump_object(lua_State* L, ByteBuffer* byteBuffer) {
+	bool luaT_json_parser_dump_object(lua_State* L, ByteBuffer* byteBuffer) {
 		switch (lua_type(L, -1)) {
 			case LUA_TNIL:
 				byteBuffer->append((Byte*)"null", 4);
@@ -564,7 +564,7 @@ BEGIN_NAMESPACE_TNODE {
 
 						byteBuffer->append(':');
 
-						if (!lua_json_parser_dump_object(L, byteBuffer)) { return false; }
+						if (!luaT_json_parser_dump_object(L, byteBuffer)) { return false; }
 
 						lua_pop(L, 1); /* removes 'value'; keeps 'key' for next iteration */
 					}
@@ -590,9 +590,9 @@ BEGIN_NAMESPACE_TNODE {
 		return true;
 	}
 
-	bool lua_json_parser_encode(lua_State* L, ByteBuffer* byteBuffer) {
+	bool luaT_json_parser_encode(lua_State* L, ByteBuffer* byteBuffer) {
 		int oldtop = lua_gettop(L);
-		bool rc = lua_json_parser_dump_object(L, byteBuffer);
+		bool rc = luaT_json_parser_dump_object(L, byteBuffer);
 		lua_settop(L, oldtop);
 		if (rc) {
 			byteBuffer->append('\0');

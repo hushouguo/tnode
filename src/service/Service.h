@@ -14,7 +14,7 @@ BEGIN_NAMESPACE_TNODE {
 			const char* getClassName() override { return "Service"; }
 
 		public:
-			inline LuaState* luaState() { return this->_luaState; }
+			inline lua_State* luaState() { return this->_L; }
 			inline MessageParser* messageParser() { return this->_messageParser; }
 
 		public:
@@ -25,7 +25,7 @@ BEGIN_NAMESPACE_TNODE {
 		private:
 			bool _isstop = false;
 			std::string _entryfile;
-			LuaState* _luaState = nullptr;
+			lua_State* _L = nullptr;
 			MessageParser* _messageParser = nullptr;
 
 		public:

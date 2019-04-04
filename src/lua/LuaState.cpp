@@ -34,7 +34,6 @@ BEGIN_NAMESPACE_TNODE {
 
 	bool LuaState::executeString(const char* codes) {
 		luaL_loadstring(this->luaState(), codes);
-		//return this->executeFunction(0);
 		return luaT_callFunction(this->luaState(), 0);
 	}
 
@@ -62,65 +61,6 @@ BEGIN_NAMESPACE_TNODE {
 		}
 		return true;
 	}
-
-#if 0
-	bool LuaState::executeFunction(int args) {
-		lua_State* L = this->luaState();
-		int traceback = 0, error;
-		int func_idx = -(args + 1);
-		if (!lua_isfunction(L, func_idx)) {
-			Error.cout("value at stack [%d] is not function\n", func_idx);
-			lua_pop(L, args + 1);/* remove function and args */
-			return false;
-		}
-
-		lua_getglobal(L, "__G_TRACKBACK__"); 	/* L: ...func arg1 arg2 ... G */
-		if (!lua_isfunction(L, -1)) {
-			lua_pop(L, 1);						/* L: ...func arg1 arg2 ... */
-		}
-		else {
-			lua_insert(L, func_idx - 1);		/* L: ... G func arg1 arg2 ... */
-			traceback = func_idx - 1;
-		}
-
-		//++stack->call_lua_count;
-		error = lua_pcall(L, args, 1, traceback);
-		//--stack->call_lua_count;
-
-		if (error) {
-			if (traceback == 0) {
-				Error.cout("%s\n", lua_tostring(L, -1));/* ... error */
-				lua_pop(L, 1); /* remove error message from stack */
-			}
-			else {
-				lua_pop(L, 2); /* remove __G_TRACKBACK__ and error message from stack */
-			}
-			return false;
-		}
-
-		/* get return value */
-		int ret = 0;
-		if (lua_isnumber(L, -1)) {
-			ret = (int)lua_tointeger(L, -1);
-		}
-		else if (lua_isboolean(L, -1)) {
-			ret = (int)lua_toboolean(L, -1);
-		}
-
-		//discard return value
-		if (ret != 0) {
-			Debug.cout("ret: %d\n", ret);
-		}
-
-		lua_pop(L, 1); /* remove return value from stack, L: ... [G] */
-
-		if (traceback) {
-			lua_pop(L, 1); /* remove __G_TRACKBACK__ from stack, L: ... */
-		}
-
-		return true;
-	}
-#endif
 
 	void LuaState::cleanup() {
 		lua_settop(this->luaState(), 0);
