@@ -34,7 +34,7 @@ BEGIN_NAMESPACE_TNODE {
 		return ctx;
 	}
 
-	void luaT_json_parser_ctx_delete(lua_json_parser_ctx_t* ctx) {
+	void luaT_json_parser_ctx_delete(luaT_json_parser_ctx_t* ctx) {
 		SafeDelete(ctx->state_stack);
 		SafeDelete(ctx->array_stack);
 		SafeFree(ctx);

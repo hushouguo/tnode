@@ -33,12 +33,13 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(sid < MAX_SERVICE, false, "the number of service cannot exceed %d", MAX_SERVICE);
 		assert(this->_services[sid] == nullptr);
 		Service* service = new Service(sid);
+		this->_services[sid] = service;
 		bool result = service->init(entryfile);
 		if (!result) {
 			SafeDelete(service);
+			this->_services[sid] = nullptr;
 			return false;
 		}
-		this->_services[sid] = service;
 		return true;
 	}
 

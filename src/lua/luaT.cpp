@@ -8,8 +8,8 @@
 BEGIN_NAMESPACE_TNODE {
 	lua_State* luaT_newstate(u32 stackSize) {
 		lua_State* L = luaL_newstate();		
-		luaL_openlibs(this->luaState());
-		lua_checkstack(this->luaState(), stackSize/*LUA_STACK_SIZE*/);
+		luaL_openlibs(L);
+		lua_checkstack(L, stackSize/*LUA_STACK_SIZE*/);
 		//TODO: error handler & allocator 
 
 		luaT_regNamespace(L, LUA_REGISTER_NAMESPACE);
@@ -23,18 +23,15 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	void luaT_setOwner(lua_State* L, u32 sid) {
-		Debug << "before setOwner: " << lua_gettop(L);
 		lua_pushinteger(L, sid);
 		lua_setglobal(L, LUA_REGISTER_SERVICE);
-		Debug << "after setOwner: " << lua_gettop(L);
 	}
 	
 	u32 luaT_getOwner(lua_State* L) {
-		Debug << "before getOwner: " << lua_gettop(L);
 		lua_getglobal(L, LUA_REGISTER_SERVICE);
 		CHECK_RETURN(!lua_isnoneornil(L, -1), -1, "Not owner: %s", LUA_REGISTER_SERVICE);
 		u32 sid = lua_tointeger(L, -1);
-		Debug << "after getOwner: " << lua_gettop(L);
+		lua_pop(L, 1);
 		return sid;
 	}
 
@@ -127,7 +124,7 @@ BEGIN_NAMESPACE_TNODE {
 
 	// callFunction
 	bool luaT_callFunction(lua_State* L) {
-		luaT_pcall(L, 0);
+		return luaT_pcall(L, 0);
 	}
 	
 	void luaT_getRegistry(lua_State* L, int ref) {
@@ -224,11 +221,11 @@ BEGIN_NAMESPACE_TNODE {
 	}
 	
 	void luaT_endNamespace(lua_State* L) {
-		lua_pop(this->luaState(), 2);
+		lua_pop(L, 2);
 	}
 	
 	void luaT_regFunction(lua_State* L, const char* func, lua_CFunction routine) {
-		lua_pushstring(L, function);
+		lua_pushstring(L, func);
 		lua_pushcfunction(L, routine);
 		lua_rawset(L, -3);
 	}
@@ -265,7 +262,7 @@ BEGIN_NAMESPACE_TNODE {
 
 	void luaT_regObject(lua_State* L, const char* key, const void* value) {
 		lua_pushstring(L, key);
-		lua_pushlightuserdata(L, value);
+		lua_pushlightuserdata(L, (void*) value);
 		lua_rawset(L, -3);
 	}
 
