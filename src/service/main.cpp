@@ -91,16 +91,38 @@ bool init_runtime_environment(int argc, char* argv[]) {
 	act.sa_handler = [](int sig) {
 		//fprintf(stderr, "receive signal: %d\n", sig);
 		// Don't call Non reentrant function, just like malloc, free etc, i/o function also cannot call.
-		if (sig == SIGRTMIN) {		// SIGRTMIN: Wake up thread, nothing to do
-			return;	// SIGRTMIN: #define SIGRTMIN        (__libc_current_sigrtmin ())
-		}
+		//if (sig == SIGRTMIN) {		// SIGRTMIN: Wake up thread, nothing to do
+		//	return;	// SIGRTMIN: #define SIGRTMIN        (__libc_current_sigrtmin ())
+		//}
 		switch (sig) {
+			case SIGINT:
+			case SIGTERM:
+			case SIGQUIT: 
+				sConfig.halt = true; break;	// Note: schedule halt
+		
+			case SIGHUP: 
+				sConfig.reload = true; break; // NOTE: reload configure file
+
+			case SIGUSR1:
+			case SIGUSR2:
+				//dump system runtime information
+				//tc_malloc_stats();
+				break;
+			
 			case SIGWINCH: break;	// the window size change, ignore
-			case SIGHUP: sConfig.reload = true;	// NOTE: reload configure file						   
-			case SIGALRM: break;	// timer expire
+			//case SIGALRM: break;	// timer expire
+			
 			default: sConfig.syshalt(sig); break;
 		}
 	};
+
+	sigaction(SIGINT, &act, nullptr);
+	sigaction(SIGTERM, &act, nullptr);
+	sigaction(SIGQUIT, &act, nullptr);
+	sigaction(SIGHUP, &act, nullptr);
+	sigaction(SIGUSR1, &act, nullptr);
+	sigaction(SIGUSR2, &act, nullptr);
+	//sigaction(SIGALRM, &act, nullptr);
 
 #if 0
 	sigaction(SIGHUP, &act, nullptr);		// 1
