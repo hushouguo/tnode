@@ -20,7 +20,8 @@ BEGIN_NAMESPACE_TNODE {
 		bool retval = this->_messageParser->load(proto_dir);
 		CHECK_RETURN(retval, false, "load protocol: %s error", proto_dir);
 
-		this->_L = luaT_newstate(this->id);
+		this->_L = luaT_newstate();
+		luaT_setOwner(this->_L, this->id);
 		this->_entryfile = entryfile;
 		/* run entry script file */
 		if (!luaT_execFile(this->_L, this->_entryfile.c_str())) { return false; }

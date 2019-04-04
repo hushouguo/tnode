@@ -12,9 +12,12 @@
 #define LUA_REGISTER_SERVICE				"cc.service"
 
 BEGIN_NAMESPACE_TNODE {
-	lua_State* luaT_newstate(u32 sid, u32 stackSize = LUA_STACK_SIZE);
+	lua_State* luaT_newstate(u32 stackSize = LUA_STACK_SIZE);
 	void luaT_close(lua_State*);
 
+	void luaT_setOwner(lua_State*, u32 sid);
+	u32 luaT_getOwner(lua_State*);
+	
 	void luaT_showversion(lua_State* L);
 	const char* luaT_tostring(lua_State* L, int idx);
 	

@@ -16,13 +16,13 @@ BEGIN_NAMESPACE_TNODE {
 		}
 	}
 
-	bool ServiceManager::pushMessage(u32 sid, const Servicemessage* msg) {
-		assert(sid < MAX_SERVICE);
-		Service* service = this->_services[sid];
+	bool ServiceManager::pushMessage(u32 to, const Servicemessage* msg) {
+		assert(to < MAX_SERVICE);
+		Service* service = this->_services[to];
 		if (!service) {
 			release_message(msg);
 		}
-		CHECK_RETURN(service, false, "Not found service: %d", sid);
+		CHECK_RETURN(service, false, "Not found service: %d", to);
 		service->pushMessage(msg);
 		//this->schedule(service);
 		return true;

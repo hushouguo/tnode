@@ -15,10 +15,12 @@ BEGIN_NAMESPACE_TNODE {
 			
 			// multi-thread exclusion
 		public:
-			bool pushMessage(u32 sid, const Servicemessage* msg);
+			bool pushMessage(u32 to, const Servicemessage* msg);
 		
 			bool newservice(const char* entryfile);
-			Service* getService(u32 id);
+			inline Service* getService(u32 sid) {
+				return sid < MAX_SERVICE ? this->_services[sid] : nullptr;
+			}
 			void stop();
 			void schedule();
 			void schedule(Service* service);

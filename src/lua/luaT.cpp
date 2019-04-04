@@ -6,7 +6,7 @@
 #include "tnode.h"
 
 BEGIN_NAMESPACE_TNODE {
-	lua_State* luaT_newstate(u32 sid, u32 stackSize) {
+	lua_State* luaT_newstate(u32 stackSize) {
 		lua_State* L = luaL_newstate();		
 		luaL_openlibs(this->luaState());
 		lua_checkstack(this->luaState(), stackSize/*LUA_STACK_SIZE*/);
@@ -15,15 +15,27 @@ BEGIN_NAMESPACE_TNODE {
 		luaT_regNamespace(L, LUA_REGISTER_NAMESPACE);
 		luaT_reg_functions(L);
 		
-		luaT_beginNamespace(L, LUA_REGISTER_NAMESPACE);
-		luaT_regInteger(L, LUA_REGISTER_SERVICE, sid);
-		luaT_endNamespace(L);		
-
 		return L;
 	}
 	
 	void luaT_close(lua_State* L) {
 		lua_close(L);
+	}
+
+	void luaT_setOwner(lua_State* L, u32 sid) {
+		Debug << "before setOwner: " << lua_gettop(L);
+		lua_pushinteger(L, sid);
+		lua_setglobal(L, LUA_REGISTER_SERVICE);
+		Debug << "after setOwner: " << lua_gettop(L);
+	}
+	
+	u32 luaT_getOwner(lua_State* L) {
+		Debug << "before getOwner: " << lua_gettop(L);
+		lua_getglobal(L, LUA_REGISTER_SERVICE);
+		CHECK_RETURN(!lua_isnoneornil(L, -1), -1, "Not owner: %s", LUA_REGISTER_SERVICE);
+		u32 sid = lua_tointeger(L, -1);
+		Debug << "after getOwner: " << lua_gettop(L);
+		return sid;
 	}
 
 	void luaT_showversion(lua_State* L) {

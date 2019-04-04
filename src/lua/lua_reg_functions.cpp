@@ -14,7 +14,7 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));	
 		size_t len = 0;
 		const char* jsonstr = lua_tolstring(L, -args, &len);
-		return lua_json_parser_decode(L, jsonstr, len) ? 1 : 0;
+		return luaT_json_parser_decode(L, jsonstr, len) ? 1 : 0;
 	}
 
 	//
@@ -24,7 +24,7 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_istable(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		ByteBuffer byteBuffer;
-		if (lua_json_parser_encode(L, &byteBuffer)) {
+		if (luaT_json_parser_encode(L, &byteBuffer)) {
 			lua_pushstring(L, (const char*)(byteBuffer.rbuffer()));
 		}
 		else {
@@ -41,7 +41,7 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));	
 		size_t len = 0;
 		const char* file = lua_tolstring(L, -args, &len);	
-		return lua_xml_parser_decode(L, file) ? 1 : 0;
+		return luaT_xml_parser_decode(L, file) ? 1 : 0;
 	}
 
 	//
@@ -118,7 +118,8 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		CHECK_RETURN(lua_istable(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
 		u32 msgid = lua_tointeger(L, -args);
-		Service* service = GetService(L);
+		u32 sid = luaT_getOwner(L);
+		Service* service = sServiceManager.getService(sid);
 		assert(service);
 		std::string outstring;
 		bool retval = service->messageParser()->encode(L, msgid, outstring);
@@ -136,7 +137,8 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(lua_isstring(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));			
 		u32 msgid = lua_tointeger(L, -args);
 		std::string instring = lua_tostring(L, -(args - 1));
-		Service* service = GetService(L);
+		u32 sid = luaT_getOwner(L);
+		Service* service = sServiceManager.getService(sid);
 		assert(service);
 		bool retval = service->messageParser()->decode(L, msgid, instring);
 		CHECK_RETURN(retval, 0, "decode message: %d error", msgid);
@@ -342,7 +344,9 @@ BEGIN_NAMESPACE_TNODE {
 		
 		const char* address = lua_tostring(L, -args);
 		int port = lua_tointeger(L, -(args - 1));
-		Service* service = GetService(L);
+
+		u32 sid = luaT_getOwner(L);
+		Service* service = sServiceManager.getService(sid);
 		assert(service);
 		
 		SOCKET fd = sNetworkManager.newserver(service->id, address, port);
@@ -368,7 +372,9 @@ BEGIN_NAMESPACE_TNODE {
 		
 		const char* address = lua_tostring(L, -args);
 		int port = lua_tonumber(L, -(args - 1));
-		Service* service = GetService(L);
+
+		u32 sid = luaT_getOwner(L);
+		Service* service = sServiceManager.getService(sid);
 		assert(service);
 		
 		SOCKET fd = sNetworkManager.newclient(service->id, address, port);
@@ -395,8 +401,9 @@ BEGIN_NAMESPACE_TNODE {
 		SOCKET fd = lua_tointeger(L, -args);
 		u64 entityid = lua_tointeger(L, -(args - 1));
 		u32 msgid = lua_tointeger(L, -(args - 2));
-		
-		Service* service = GetService(L);
+
+		u32 sid = luaT_getOwner(L);
+		Service* service = sServiceManager.getService(sid);
 		assert(service);
 		
 		std::string outstring;
@@ -415,17 +422,18 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		CHECK_RETURN(lua_islightuserdata(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
 		
-		u32 sid = lua_tointeger(L, -args);
-		
-		Service* service = GetService(L);
+		u32 to = lua_tointeger(L, -args);
+
+		u32 sid = luaT_getOwner(L);
+		Service* service = sServiceManager.getService(sid);
 		assert(service);
 
 		void* userdata = lua_touserdata(L, -(args - 1));
 		Servicemessage* msg = static_cast<Servicemessage*>(userdata);
 
 		msg->from = service->id;
-		msg->to = sid;
-		sServiceManager.pushMessage(sid, msg);
+		msg->to = to;
+		sServiceManager.pushMessage(to, msg);
 		
 		return 0;
 	}
@@ -440,8 +448,9 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(lua_isfunction(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
 
 		u32 msgid = lua_tointeger(L, -args);
-		
-		Service* service = GetService(L);
+
+		u32 sid = luaT_getOwner(L);
+		Service* service = sServiceManager.getService(sid);
 		assert(service);
 
 		lua_pushvalue(L, -(args - 1));
@@ -458,8 +467,11 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(args == 2, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		CHECK_RETURN(lua_isstring(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
-		Service* service = GetService(L);
+
+		u32 sid = luaT_getOwner(L);
+		Service* service = sServiceManager.getService(sid);
 		assert(service);
+		
 		u32 msgid = lua_tointeger(L, -args);
 		const char* name = lua_tostring(L, -(args - 1));
 		bool retval = service->messageParser()->regmsg(msgid, name);
