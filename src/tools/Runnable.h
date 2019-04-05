@@ -16,8 +16,10 @@ BEGIN_NAMESPACE_TNODE {
 				if (!this->_isrunning) {
 					this->_isrunning = true;
 					sThreadPool.add([](Runnable* runnable) {
+							Debug.cout("schedule: %p run", this);
 							runnable->run();
 							runnable->_isrunning = false;
+							Debug.cout("schedule: %p run over", this);
 							}, this);
 				}
 			}

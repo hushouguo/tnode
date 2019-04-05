@@ -26,7 +26,7 @@ BEGIN_NAMESPACE_TNODE {
 					SocketServer* socketServer = dynamic_cast<SocketServer*>(socket);
 					assert(socketServer);
 					for (SOCKET newfd = socketServer->accept(); newfd != -1; newfd = socketServer->accept()) {
-						Socket* newsocket = SocketCreator::create(newfd, socketServer->owner());
+						Socket* newsocket = SocketCreator::create(newfd);
 						assert(this->_sockets[newfd] == nullptr);
 						this->_sockets[newfd] = newsocket;
 						this->_poll.addSocket(newfd);
@@ -38,17 +38,15 @@ BEGIN_NAMESPACE_TNODE {
 						this->closeSocket(s, "recv error");
 					}
 					else {
-						ByteBuffer& buffer = socket->recvBuffer();
+						ByteBuffer& buffer = socket->getBuffer();
 						while (true) {
 							Socketmessage* rawmsg = (Socketmessage*) (buffer.rbuffer());
 							//Debug << "Socket: " << socket->fd() << ", buffer.size: " << buffer.size() << ", rawmsg->len: " << rawmsg->len;
 							if (buffer.size() >= sizeof(rawmsg->len) && buffer.size() >= rawmsg->len) {
 								Servicemessage* newmsg = allocate_message(rawmsg->len);
-								newmsg->from = 0;
-								newmsg->to = socket->owner();
 								newmsg->fd = s;
 								memcpy(&newmsg->rawmsg, rawmsg, rawmsg->len);
-								sServiceManager.pushMessage(newmsg->to, newmsg);
+								sServiceManager.pushMessage(newmsg);
 								buffer.rlength(rawmsg->len);
 							}
 							else { break; }
@@ -83,8 +81,8 @@ BEGIN_NAMESPACE_TNODE {
 		}
 	}
 			
-	SOCKET NetworkManager::newserver(u32 owner, const char* address, int port) {
-		SocketServer* socketServer = SocketServerCreator::create(owner);
+	SOCKET NetworkManager::newserver(const char* address, int port) {
+		SocketServer* socketServer = SocketServerCreator::create();
 		bool retval = socketServer->listen(address, port);
 		if (!retval) {
 			SafeDelete(socketServer);
@@ -97,8 +95,8 @@ BEGIN_NAMESPACE_TNODE {
 		return socketServer->fd();
 	}
 
-	SOCKET NetworkManager::newclient(u32 owner, const char* address, int port) {
-		SocketClient* socketClient = SocketClientCreator::create(owner);
+	SOCKET NetworkManager::newclient(const char* address, int port) {
+		SocketClient* socketClient = SocketClientCreator::create();
 		bool retval = socketClient->connect(address, port);
 		if (!retval) {
 			SafeDelete(socketClient);

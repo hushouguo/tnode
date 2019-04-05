@@ -18,17 +18,16 @@ BEGIN_NAMESPACE_TNODE {
 			virtual SOCKET fd() = 0;
 			virtual int socket_type() = 0;
 			virtual void socket_type(int) = 0;
-			virtual u32 owner() = 0;
 			
 		public:
 			virtual bool receive() = 0;
 			virtual bool send(const void*, size_t) = 0;
 			virtual bool send() = 0;
-			virtual ByteBuffer& recvBuffer() = 0;
+			virtual ByteBuffer& getBuffer() = 0;
 	};
 
 	struct SocketCreator {
-		static Socket* create(SOCKET s, u32 owner);
+		static Socket* create(SOCKET s);
 	};
 }
 

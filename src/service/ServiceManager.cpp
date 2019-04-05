@@ -16,7 +16,9 @@ BEGIN_NAMESPACE_TNODE {
 		}
 	}
 
-	bool ServiceManager::pushMessage(u32 to, const Servicemessage* msg) {
+	bool ServiceManager::pushMessage(const Servicemessage* msg) {
+#if 0	
+		//TODO:
 		assert(to < MAX_SERVICE);
 		Service* service = this->_services[to];
 		if (!service) {
@@ -25,11 +27,18 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_RETURN(service, false, "Not found service: %d", to);
 		service->pushMessage(msg);
 		//this->schedule(service);
+#endif		
 		return true;
+	}
+
+	void ServiceManager::entityfunc(u64 entityid, u32 service, int ref) {
+	}
+	
+	void ServiceManager::msgfunc(u32 msgid, u32 service, int ref) {
 	}
 	
 	bool ServiceManager::newservice(const char* entryfile) {
-		u32 sid = this->_init_serviceid++;
+		u32 sid = this->_initid++;
 		CHECK_RETURN(sid < MAX_SERVICE, false, "the number of service cannot exceed %d", MAX_SERVICE);
 		assert(this->_services[sid] == nullptr);
 		Service* service = new Service(sid);

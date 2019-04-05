@@ -16,7 +16,7 @@ BEGIN_NAMESPACE_TNODE {
 	};
 
 	struct SocketClientCreator {
-		static SocketClient* create(u32 owner);
+		static SocketClient* create();
 	};
 }
 

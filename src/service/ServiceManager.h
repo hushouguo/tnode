@@ -15,8 +15,7 @@ BEGIN_NAMESPACE_TNODE {
 			
 			// multi-thread exclusion
 		public:
-			bool pushMessage(u32 to, const Servicemessage* msg);
-		
+			bool pushMessage(const Servicemessage* msg);		
 			bool newservice(const char* entryfile);
 			inline Service* getService(u32 sid) {
 				return sid < MAX_SERVICE ? this->_services[sid] : nullptr;
@@ -26,8 +25,16 @@ BEGIN_NAMESPACE_TNODE {
 			void schedule(Service* service);
 			
 		private:
-			int _init_serviceid = 0;
+			int _initid = 0;
 			Service* _services[MAX_SERVICE];
+
+		public:
+			void entityfunc(u64 entityid, u32 service, int ref);
+			void msgfunc(u32 msgid, u32 service, int ref);
+			
+		private:
+			LockfreeMap<u64, u64> _entityfuncs;
+			LockfreeMap<u32, u64> _msgfuncs;
 	};
 }
 

@@ -17,8 +17,8 @@ BEGIN_NAMESPACE_TNODE {
 		public:
 			bool sendString(SOCKET s, u64 entityid, u32 msgid, std::string& outstring);
 			void closeSocket(SOCKET s, const char* reason);
-			SOCKET newserver(u32 owner, const char* address, int port);
-			SOCKET newclient(u32 owner, const char* address, int port);
+			SOCKET newserver(const char* address, int port);
+			SOCKET newclient(const char* address, int port);
 
 		public:			
 			void run() override;

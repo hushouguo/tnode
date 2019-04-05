@@ -29,17 +29,21 @@ BEGIN_NAMESPACE_TNODE {
 			MessageParser* _messageParser = nullptr;
 
 		public:
-			inline void regfunction(SOCKET s, int ref) {
-				this->_regfuncs.insert(std::make_pair(s, ref));
-			}
+			//inline void regfunction(SOCKET s, int ref) {
+			//	this->_regfuncs.insert(std::make_pair(s, ref));
+			//}
 
 			inline void msgfunction(u32 msgid, int ref) {
 				Debug << "reg msg: " << msgid << ", ref: " << ref;
 				this->_msgfuncs.insert(std::make_pair(msgid, ref));
 			}
 
+			inline bool findmsg(u32 msgid) {
+				return this->_msgfuncs.find(msgid) != this->_msgfuncs.end();
+			}
+
 		private:
-			std::unordered_map<SOCKET, int> _regfuncs;
+			//std::unordered_map<SOCKET, int> _regfuncs;
 			std::unordered_map<u32, int> _msgfuncs;
 		
 		public:

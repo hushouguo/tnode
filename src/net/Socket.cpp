@@ -8,25 +8,23 @@
 BEGIN_NAMESPACE_TNODE {
 	class SocketInternal : public Socket {
 		public:
-			SocketInternal(SOCKET s, u32 owner);
+			SocketInternal(SOCKET s);
 			~SocketInternal();
 			
 		public:
 			SOCKET fd() override { return this->_fd; }
 			int socket_type() override { return this->_socket_type; }
 			void socket_type(int value) override { this->_socket_type = value; }
-			u32 owner() override { return this->_owner; }
 						
 		public:
 			bool receive() override;
 			bool send(const void*, size_t) override;
 			bool send() override;
-			ByteBuffer& recvBuffer() override { return this->_rbuffer; }
+			ByteBuffer& getBuffer() override { return this->_rbuffer; }
 
 		private:
 			SOCKET _fd = -1;
 			int _socket_type = -1;
-			u32 _owner = 0;
 
 		private:			
 			ByteBuffer _rbuffer, _wbuffer;
@@ -34,10 +32,9 @@ BEGIN_NAMESPACE_TNODE {
 			ssize_t sendBytes(const Byte*, size_t);
 	};
 
-	SocketInternal::SocketInternal(SOCKET s, u32 owner) {
+	SocketInternal::SocketInternal(SOCKET s) {
 		this->_fd = s;
 		this->_socket_type = SOCKET_CONNECTION;
-		this->_owner = owner;
 	}
 
 	Socket::~Socket() {}
@@ -132,8 +129,8 @@ BEGIN_NAMESPACE_TNODE {
 		return bytes;
 	}
 	
-	Socket* SocketCreator::create(SOCKET s, u32 owner) {
-		return new SocketInternal(s, owner);
+	Socket* SocketCreator::create(SOCKET s) {
+		return new SocketInternal(s);
 	}
 }
 
