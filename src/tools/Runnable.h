@@ -15,7 +15,7 @@ BEGIN_NAMESPACE_TNODE {
 			void schedule() {
 				if (!this->_isrunning) {
 					this->_isrunning = true;
-					sThreadPool.add([](Runnable* runnable) {
+					sThreadPool.add([this](Runnable* runnable) {
 							Debug.cout("schedule: %p run", this);
 							runnable->run();
 							runnable->_isrunning = false;
