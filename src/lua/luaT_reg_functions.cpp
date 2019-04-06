@@ -410,7 +410,7 @@ BEGIN_NAMESPACE_TNODE {
 		assert(service);
 
 		size_t ByteSizeLong = service->messageParser()->ByteSizeLong(msgid);
-		CHECK_RETURN(payload_len > 0, 0, "msg: %d not found", msgid);
+		CHECK_RETURN(ByteSizeLong > 0, 0, "msg: %d not found", msgid);
 		
 		Servicemessage* message = allocate_message(ByteSizeLong);
 		size_t payload_len = 0;

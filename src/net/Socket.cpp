@@ -25,7 +25,7 @@ BEGIN_NAMESPACE_TNODE {
 		private:
 			SOCKET _fd = -1;
 			int _socket_type = -1;
-			std::atomic_flag _slocker = ATOMIC_FLAG_INIT
+			std::atomic_flag _slocker = ATOMIC_FLAG_INIT;
 			LockfreeQueue<const Servicemessage*> _msglist;
 
 		private:			
@@ -46,7 +46,6 @@ BEGIN_NAMESPACE_TNODE {
 			const Servicemessage* message = this->_msglist.pop_front();
 			release_message(message);
 		}
-		this->_msglist.clear();
 	}
 
 	bool SocketInternal::receive() {
@@ -62,17 +61,6 @@ BEGIN_NAMESPACE_TNODE {
 		
 	bool SocketInternal::send(const Servicemessage* message) {
 		this->_msglist.push_back(message);
-		return this->send();
-		
-		if (this->_wbuffer.size() == 0) {
-			ssize_t bytes = this->sendBytes((const Byte*)buffer, len);
-			CHECK_RETURN(bytes >= 0, false, "sendBytes error");
-			if (size_t(bytes) < len) {
-				this->_wbuffer.append((const Byte*)buffer + bytes, len - bytes);
-			}
-			return true;
-		}
-		this->_wbuffer.append((const Byte*)buffer, len);
 		return this->send();
 	}	
 
@@ -93,7 +81,7 @@ BEGIN_NAMESPACE_TNODE {
 			
 				while (!this->_msglist.empty()) {
 					const Servicemessage* message = this->_msglist.pop_front();
-					ssize_t bytes = this->sendBytes(&message->rawmsg, message->rawmsg.len);
+					ssize_t bytes = this->sendBytes((const Byte*) &message->rawmsg, message->rawmsg.len);
 					if (bytes < 0) {
 						release_message(message);
 						CHECK_RETURN(bytes >= 0, false, "sendBytes error");
