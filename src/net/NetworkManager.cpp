@@ -38,18 +38,8 @@ BEGIN_NAMESPACE_TNODE {
 					this->closeSocket(s, "recv error");
 				}
 				else {
-					ByteBuffer& buffer = socket->getBuffer();
-					while (true) {
-						Socketmessage* rawmsg = (Socketmessage*) (buffer.rbuffer());
-						//Debug << "Socket: " << socket->fd() << ", buffer.size: " << buffer.size() << ", rawmsg->len: " << rawmsg->len;
-						if (buffer.size() >= sizeof(rawmsg->len) && buffer.size() >= rawmsg->len) {
-							Servicemessage* newmsg = allocate_message(rawmsg->len);
-							newmsg->fd = s;
-							memcpy(&newmsg->rawmsg, rawmsg, rawmsg->len);
-							sServiceManager.pushMessage(newmsg);
-							buffer.rlength(rawmsg->len);
-						}
-						else { break; }
+					for (const Servicemessage* msg = socket->getMessage(); msg; msg = socket->getMessage()) {
+						sServiceManager.pushMessage(msg);
 					}
 				}
 			}

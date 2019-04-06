@@ -20,13 +20,13 @@ BEGIN_NAMESPACE_TNODE {
 			bool receive() override;
 			bool send(const Servicemessage* message) override;
 			bool send() override;
-			ByteBuffer& getBuffer() override { return this->_rbuffer; }
+			const Servicemessage* getMessage() override { return this->_rlist.empty() ? nullptr : this->_rlist.pop_front(); }
 
 		private:
 			SOCKET _fd = -1;
 			int _socket_type = -1;
 			std::atomic_flag _slocker = ATOMIC_FLAG_INIT;
-			LockfreeQueue<const Servicemessage*> _msglist;
+			LockfreeQueue<const Servicemessage*> _rlist, _slist;
 
 		private:			
 			ByteBuffer _rbuffer, _wbuffer;
@@ -42,8 +42,12 @@ BEGIN_NAMESPACE_TNODE {
 	Socket::~Socket() {}
 	SocketInternal::~SocketInternal() {
 		SafeClose(this->_fd);
-		while (!this->_msglist.empty()) {
-			const Servicemessage* message = this->_msglist.pop_front();
+		while (!this->_rlist.empty()) {
+			const Servicemessage* message = this->_rlist.pop_front();
+			release_message(message);
+		}		
+		while (!this->_slist.empty()) {
+			const Servicemessage* message = this->_slist.pop_front();
 			release_message(message);
 		}
 	}
@@ -56,11 +60,26 @@ BEGIN_NAMESPACE_TNODE {
 			this->_rbuffer.wlength(size_t(bytes));
 		}
 		//Debug << "Socket: " << this->_fd << " receive bytes: " << bytes;
+		
+		ByteBuffer& buffer = this->_rbuffer;
+		while (true) {
+			Socketmessage* rawmsg = (Socketmessage*) (buffer.rbuffer());
+			if (buffer.size() >= sizeof(rawmsg->len) && buffer.size() >= rawmsg->len) {
+				Servicemessage* newmsg = allocate_message(rawmsg->len);
+				newmsg->fd = this->fd();
+				memcpy(&newmsg->rawmsg, rawmsg, rawmsg->len);
+				this->_rlist.push_back(newmsg);
+				
+				buffer.rlength(rawmsg->len);
+			}
+			else { break; }
+		}
+		
 		return true;	
 	}
 		
 	bool SocketInternal::send(const Servicemessage* message) {
-		this->_msglist.push_back(message);
+		this->_slist.push_back(message);
 		return this->send();
 	}	
 
@@ -79,8 +98,8 @@ BEGIN_NAMESPACE_TNODE {
 					return true;	// wbuffer did not send all
 				}
 			
-				while (!this->_msglist.empty()) {
-					const Servicemessage* message = this->_msglist.pop_front();
+				while (!this->_slist.empty()) {
+					const Servicemessage* message = this->_slist.pop_front();
 					ssize_t bytes = this->sendBytes((const Byte*) &message->rawmsg, message->rawmsg.len);
 					if (bytes < 0) {
 						release_message(message);

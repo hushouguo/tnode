@@ -20,7 +20,7 @@ BEGIN_NAMESPACE_TNODE {
 			bool receive() override { return this->_socket->receive(); }
 			bool send(const Servicemessage* message) override { return this->_socket->send(message); }
 			bool send() override { return this->_socket->send(); }
-			ByteBuffer& getBuffer() override { return this->_socket->getBuffer(); }
+			const Servicemessage* getMessage() override { return this->_socket->getMessage(); }
 
 		public:
 			bool listen(const char* address, int port) override;

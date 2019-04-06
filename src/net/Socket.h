@@ -23,7 +23,7 @@ BEGIN_NAMESPACE_TNODE {
 			virtual bool receive() = 0;
 			virtual bool send(const Servicemessage* message) = 0;
 			virtual bool send() = 0;
-			virtual ByteBuffer& getBuffer() = 0;
+			virtual const Servicemessage* getMessage() = 0;
 	};
 
 	struct SocketCreator {
