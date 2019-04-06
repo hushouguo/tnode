@@ -19,6 +19,7 @@ BEGIN_NAMESPACE_TNODE {
 		public:
 			bool load(const char* filename) override;/* filename also is directory */
 			bool regmsg(u32 msgid, const char* name) override;
+			size_t ByteSizeLong(u32 msgid) override;
 
 		public:
 			bool encode(lua_State* L, u32 msgid, void* buf, size_t& bufsize) override;
@@ -83,6 +84,12 @@ BEGIN_NAMESPACE_TNODE {
 		return message != nullptr;
 	}
 
+	size_t MessageParserInternal::ByteSizeLong(u32 msgid) {
+		Message* message = this->FindMessage(msgid);
+		CHECK_RETURN(message, 0, "not reg msg: %d", msgid);
+		return message->ByteSizeLong();
+	}
+	
 	Message* MessageParserInternal::FindMessage(u32 msgid) {
 		return FindOrNull(this->_messages, msgid);
 	}

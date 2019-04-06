@@ -11,11 +11,11 @@
 BEGIN_NAMESPACE_TNODE {
 	class NetworkManager : public Runnable {
 		public:
-			NetworkManager();
+			void init();
 
 			// multi-thread exclusion
 		public:
-			bool sendString(SOCKET s, u64 entityid, u32 msgid, std::string& outstring);
+			bool sendMessage(const Servicemessage* message);
 			void closeSocket(SOCKET s, const char* reason);
 			SOCKET newserver(const char* address, int port);
 			SOCKET newclient(const char* address, int port);
@@ -27,7 +27,6 @@ BEGIN_NAMESPACE_TNODE {
 		private:
 			Poll _poll;
 			Socket* _sockets[MAX_SOCKET];
-			LockfreeQueue<Servicemessage*> _sendQueue;
 	};
 }
 

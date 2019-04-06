@@ -408,12 +408,23 @@ BEGIN_NAMESPACE_TNODE {
 		u32 sid = luaT_getOwner(L);
 		Service* service = sServiceManager.getService(sid);
 		assert(service);
-		
-		std::string outstring;
-		bool retval = service->messageParser()->encode(L, msgid, outstring);
-		CHECK_RETURN(retval, 0, "encode message: %d error", msgid);
 
-		sNetworkManager.sendString(fd, entityid, msgid, outstring);
+		size_t ByteSizeLong = service->messageParser()->ByteSizeLong(msgid);
+		CHECK_RETURN(payload_len > 0, 0, "msg: %d not found", msgid);
+		
+		Servicemessage* message = allocate_message(ByteSizeLong);
+		size_t payload_len = 0;
+		bool retval = service->messageParser()->encode(L, msgid, message->rawmsg.payload, payload_len);
+		CHECK_RETURN(retval, 0, "encode message: %d error", msgid);
+		assert(payload_len <= ByteSizeLong);
+
+		message->fd = fd;
+		message->rawmsg.entityid = entityid;
+		message->rawmsg.msgid = msgid;
+		message->rawmsg.len = payload_len + sizeof(Socketmessage);
+		
+		sNetworkManager.sendMessage(message);
+		
 		return 0;
 	}
 

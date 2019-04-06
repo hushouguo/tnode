@@ -21,7 +21,7 @@ BEGIN_NAMESPACE_TNODE {
 			
 		public:
 			virtual bool receive() = 0;
-			virtual bool send(const void*, size_t) = 0;
+			virtual bool send(const Servicemessage* message) = 0;
 			virtual bool send() = 0;
 			virtual ByteBuffer& getBuffer() = 0;
 	};

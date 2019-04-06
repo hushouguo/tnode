@@ -18,13 +18,15 @@ BEGIN_NAMESPACE_TNODE {
 						
 		public:
 			bool receive() override;
-			bool send(const void*, size_t) override;
+			bool send(const Servicemessage* message) override;
 			bool send() override;
 			ByteBuffer& getBuffer() override { return this->_rbuffer; }
 
 		private:
 			SOCKET _fd = -1;
 			int _socket_type = -1;
+			std::atomic_flag _slocker = ATOMIC_FLAG_INIT
+			LockfreeQueue<const Servicemessage*> _msglist;
 
 		private:			
 			ByteBuffer _rbuffer, _wbuffer;
@@ -40,6 +42,11 @@ BEGIN_NAMESPACE_TNODE {
 	Socket::~Socket() {}
 	SocketInternal::~SocketInternal() {
 		SafeClose(this->_fd);
+		while (!this->_msglist.empty()) {
+			const Servicemessage* message = this->_msglist.pop_front();
+			release_message(message);
+		}
+		this->_msglist.clear();
 	}
 
 	bool SocketInternal::receive() {
@@ -53,7 +60,10 @@ BEGIN_NAMESPACE_TNODE {
 		return true;	
 	}
 		
-	bool SocketInternal::send(const void* buffer, size_t len) {
+	bool SocketInternal::send(const Servicemessage* message) {
+		this->_msglist.push_back(message);
+		return this->send();
+		
 		if (this->_wbuffer.size() == 0) {
 			ssize_t bytes = this->sendBytes((const Byte*)buffer, len);
 			CHECK_RETURN(bytes >= 0, false, "sendBytes error");
@@ -67,11 +77,38 @@ BEGIN_NAMESPACE_TNODE {
 	}	
 
 	bool SocketInternal::send() {
-		if (this->_wbuffer.size() > 0) {
-			ssize_t bytes = this->sendBytes(this->_wbuffer.rbuffer(), this->_wbuffer.size());
-			CHECK_RETURN(bytes >= 0, false, "sendBytes error");
-			if (size_t(bytes) > 0) {
-				this->_wbuffer.rlength(size_t(bytes));
+		if (!this->_slocker.test_and_set()) {	// set OK, return false
+			while (true) {
+				if (this->_wbuffer.size() > 0) {
+					ssize_t bytes = this->sendBytes(this->_wbuffer.rbuffer(), this->_wbuffer.size());
+					CHECK_RETURN(bytes >= 0, false, "sendBytes error");
+					if (size_t(bytes) > 0) {
+						this->_wbuffer.rlength(size_t(bytes));
+					}
+				}
+			
+				if (this->_wbuffer.size() > 0) {
+					return true;	// wbuffer did not send all
+				}
+			
+				while (!this->_msglist.empty()) {
+					const Servicemessage* message = this->_msglist.pop_front();
+					ssize_t bytes = this->sendBytes(&message->rawmsg, message->rawmsg.len);
+					if (bytes < 0) {
+						release_message(message);
+						CHECK_RETURN(bytes >= 0, false, "sendBytes error");
+					}
+
+					if (size_t(bytes) < message->rawmsg.len) {
+						this->_wbuffer.append((const Byte*) (&message->rawmsg) + bytes, message->rawmsg.len - bytes);
+					}
+
+					release_message(message);
+					
+					if (this->_wbuffer.size() > 0) {
+						return true;	// send wouldblock
+					}
+				}
 			}
 		}
 		return true;

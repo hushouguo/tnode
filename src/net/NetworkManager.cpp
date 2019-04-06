@@ -6,7 +6,7 @@
 #include "tnode.h"
 
 BEGIN_NAMESPACE_TNODE {
-	NetworkManager::NetworkManager() {
+	void NetworkManager::init() {
 		memset(this->_sockets, 0, sizeof(this->_sockets));
 		this->schedule();
 	}
@@ -69,33 +69,19 @@ BEGIN_NAMESPACE_TNODE {
 		
 		while (!sConfig.halt) {
 			this->_poll.run(-1, readSocket, writeSocket, errorSocket);
-			while (!this->_sendQueue.empty()) {
-				Servicemessage* msg = this->_sendQueue.pop_front();
-				assert(msg->fd < MAX_SOCKET);
-				Socket* socket = this->_sockets[msg->fd];
-				CHECK_ALARM(socket, "Not found socket: %d when send msg: %d", msg->fd, msg->rawmsg.msgid);
-				if (socket) {
-					if (!socket->send(&msg->rawmsg, msg->rawmsg.len)) {
-						this->closeSocket(msg->fd, "sendQueue error");
-					}
-					// Note: socket is invalid when closeSocket
-				}
-				release_message(msg);
-			}
 		}
 	}
 			
-	bool NetworkManager::sendString(SOCKET s, u64 entityid, u32 msgid, std::string& outstring) {
+	bool NetworkManager::sendMessage(const Servicemessage* message) {
+		SOCKET s = message->fd;
 		assert(s < MAX_SOCKET);
 		Socket* socket = this->_sockets[s];
-		CHECK_RETURN(socket, false, "Not found socket: %d when send msg: %d", s, msgid);
-		Servicemessage* msg = allocate_message(outstring.length());
-		msg->fd = s;
-		msg->rawmsg.len = outstring.length() + sizeof(Socketmessage);
-		msg->rawmsg.msgid = msgid;
-		msg->rawmsg.entityid = entityid;
-		memcpy(msg->rawmsg.payload, outstring.data(), outstring.length());
-		this->_sendQueue.push_back(msg);
+		CHECK_RETURN(socket, false, "Not found socket: %d when send msg: %d", s, message->rawmsg.msgid);
+		if (!socket->send(message)) {
+			// Note: after send, message maybe already released
+			this->closeSocket(s, "sendMessage error");
+			return false;
+		}
 		return true;
 	}
 			
