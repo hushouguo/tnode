@@ -123,6 +123,7 @@ bool init_runtime_environment(int argc, char* argv[]) {
 	sigaction(SIGUSR1, &act, nullptr);
 	sigaction(SIGUSR2, &act, nullptr);
 	//sigaction(SIGALRM, &act, nullptr);
+	//sigaction(SIGRTMIN, &act, nullptr);
 
 #if 0
 	sigaction(SIGHUP, &act, nullptr);		// 1

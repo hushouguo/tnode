@@ -12,7 +12,6 @@ BEGIN_NAMESPACE_TNODE {
 	}
 		
 	Poll::~Poll() {
-		this->shutdown();
 	}
 
 	bool Poll::addSocket(SOCKET s) {
@@ -49,13 +48,16 @@ BEGIN_NAMESPACE_TNODE {
 		return true;
 	}
 
-	void Poll::shutdown() {
-		SafeClose(this->_epfd); // try to wakeup this thread
+	void Poll::stop() {
+		this->addSocket(STDOUT_FILENO);// try to wakeup epoll_wait
 	}
 
 	void Poll::run(int milliseconds, std::function<void(SOCKET)> readfunc, std::function<void(SOCKET)> writefunc, std::function<void(SOCKET)> errorfunc) {
 		/* -1 to block indefinitely, 0 to return immediately, even if no events are available. */
 		int numevents = ::epoll_wait(this->_epfd, this->_events, NM_POLL_EVENT, milliseconds);
+		if (sConfig.halt) {
+			return; // test system if halt
+		}
 		if (numevents < 0) {
 			if (errno == EINTR) {
 				return; // wake up by signal

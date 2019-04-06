@@ -16,7 +16,7 @@ BEGIN_NAMESPACE_TNODE {
 			~Poll();
 
 		public:
-			void shutdown();
+			void stop();
 			void run(int milliseconds, std::function<void(SOCKET)> readfunc, std::function<void(SOCKET)> writefunc, std::function<void(SOCKET)> errorfunc);
 			
 		public:

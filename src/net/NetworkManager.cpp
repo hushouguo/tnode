@@ -12,7 +12,7 @@ BEGIN_NAMESPACE_TNODE {
 	}
 	
 	void NetworkManager::stop() {
-		this->_poll.shutdown();
+		this->_poll.stop();
 		for (auto& socket : this->_sockets) {
 			SafeDelete(socket);
 		}
