@@ -11,7 +11,35 @@
 #define LUA_REGISTER_NAMESPACE				"cc"
 #define LUA_REGISTER_SERVICE				"cc.service"
 
+#define LUA_TINTEGER						9
+
 BEGIN_NAMESPACE_TNODE {
+	
+	// luaT_Value
+	struct luaT_Value {
+		int  type;
+		bool value_bool;
+		lua_Integer value_integer;
+		lua_Number value_float;
+		std::string value_string;
+		// Note: not support table, userdata, function etc ...
+		luaT_Value() : type(LUA_TNIL) {}
+		luaT_Value(bool value) : type(LUA_TBOOLEAN), value_bool(value) {}
+		luaT_Value(lua_Integer value) : type(LUA_TINTEGER), value_integer(value) {}
+		luaT_Value(lua_Number value) : type(LUA_TNUMBER), value_float(value) {}
+		luaT_Value(const char* value) : type(LUA_TSTRING), value_string(value) {}
+		inline void set(bool value) { this->type = LUA_TBOOLEAN; this->value_bool = value; }
+		inline void set(lua_Integer value) { this->type = LUA_TINTEGER; this->value_integer = value; }
+		inline void set(lua_Number value) { this->type = LUA_TNUMBER; this->value_float = static_cast<float>(value); }
+		inline void set(const char* value) { this->type = LUA_TSTRING; this->value_string = value; }
+		template <typename T> void operator = (T value) { this->set(value); }		
+		inline bool isbool() { return this->type == LUA_TBOOLEAN; }
+		inline bool isinteger() { return this->type == LUA_TINTEGER; }
+		inline bool isfloat() { return this->type == LUA_TNUMBER; }
+		inline bool isstring() { return this->type == LUA_TSTRING; }
+		inline bool isnil() { return this->type == LUA_TNIL; }
+	};	
+
 	lua_State* luaT_newstate(u32 stackSize = LUA_STACK_SIZE);
 	void luaT_close(lua_State*);
 
@@ -88,28 +116,6 @@ BEGIN_NAMESPACE_TNODE {
 	lua_rawset(L, -3);
 
 	
-#define LUA_TINTEGER		9
-	
-	// luaT_Value
-	struct luaT_Value {
-		int  type;
-		bool value_bool;
-		lua_Integer value_integer;
-		lua_Number value_float;
-		std::string value_string;
-		// Note: not support table, userdata, function etc ...
-		luaT_Value() : type(LUA_TNIL) {}
-		luaT_Value(bool value) : type(LUA_TBOOLEAN), value_bool(value) {}
-		luaT_Value(lua_Integer value) : type(LUA_TINTEGER), value_integer(value) {}
-		luaT_Value(lua_Number value) : type(LUA_TNUMBER), value_float(value) {}
-		luaT_Value(const char* value) : type(LUA_TSTRING), value_string(value) {}
-		inline void set(bool value) { this->type = LUA_TBOOLEAN; this->value_bool = value; }
-		inline void set(lua_Integer value) { this->type = LUA_TINTEGER; this->value_integer = value; }
-		inline void set(lua_Number value) { this->type = LUA_TNUMBER; this->value_float = static_cast<float>(value); }
-		inline void set(const char* value) { this->type = LUA_TSTRING; this->value_string = value; }
-		template <typename T> void operator = (T value) { this->set(value); }		
-	};	
-
 	bool luaT_callFunction(lua_State* L, luaT_Value&);
 	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
 	bool luaT_callFunction(lua_State* L, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, luaT_Value& ret) {

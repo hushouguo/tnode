@@ -8,7 +8,6 @@
 
 BEGIN_NAMESPACE_TNODE {
 	class ServiceManager {
-			// multi-thread exclusion
 		public:
 			bool init(const char* entryfile);
 			void stop();

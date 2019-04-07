@@ -428,6 +428,7 @@ BEGIN_NAMESPACE_TNODE {
 		return 0;
 	}
 
+#if 0
 	//
 	// void entityfunc(entityid, function(fd, entityid, msgid, o)
 	static int cc_entityfunc(lua_State* L) {
@@ -471,6 +472,7 @@ BEGIN_NAMESPACE_TNODE {
 		
 		return 0;
 	}
+#endif
 
 	//
 	// void regmsg(msgid, name)
@@ -520,8 +522,8 @@ BEGIN_NAMESPACE_TNODE {
 		LUA_REGISTER(L, "newserver", cc_newserver);
 		LUA_REGISTER(L, "newclient", cc_newclient);
 		LUA_REGISTER(L, "response", cc_response);
-		LUA_REGISTER(L, "msgfunc", cc_msgfunc);
-		LUA_REGISTER(L, "entityfunc", cc_entityfunc);
+		//LUA_REGISTER(L, "msgfunc", cc_msgfunc);
+		//LUA_REGISTER(L, "entityfunc", cc_entityfunc);
 		LUA_REGISTER(L, "release_message", cc_release_message);
 		LUA_REGISTER(L, "regmsg", cc_regmsg);
 		LUA_REGISTER(L, "closesocket", cc_closesocket);

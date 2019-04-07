@@ -34,7 +34,7 @@ BEGIN_NAMESPACE_TNODE {
 				luaT_callFunction(initservice->luaState(), msg->rawmsg.entityid, msg->rawmsg.msgid, ret),
 				exit_failure, "call `sid dispatch(entityid, msgid)` failure");
 			luaT_cleanup(initservice->luaState());
-			CHECK_GOTO(ret.type == lua_Integer, exit_failure, "dispatch return error type: %d", ret.type);
+			CHECK_GOTO(ret.isinteger(), exit_failure, "dispatch return error type: %d", ret.type);
 			sid = ret.value_integer;
 		}
 
@@ -54,7 +54,7 @@ exit_failure:
 	
 	Service* ServiceManager::newservice(const char* entryfile) {
 		u32 sid = this->_autoid++;
-		assert(this->_services.containKey(sid) == nullptr);
+		assert(this->getService(sid) == nullptr);
 		Service* service = new Service(sid);
 		this->_services.insert(sid, service);
 		bool result = service->init(entryfile);

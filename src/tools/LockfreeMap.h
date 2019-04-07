@@ -77,8 +77,11 @@ BEGIN_NAMESPACE_TNODE {
 	VALUE LockfreeMap<KEY, VALUE>::pop_front() {
 		VALUE value = typename std::unordered_map<KEY, VALUE>::value_type::second_type();
 		this->_locker.lock();
-		value = this->_map.front();
-		this->_map.pop_front();
+		auto i = this->_map.begin();
+		if (i != this->_map.end()) {
+			value = i->second;
+			this->_map.erase(i);
+		}
 		this->_locker.unlock();
 		return value;
 	}

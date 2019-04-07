@@ -142,7 +142,8 @@ BEGIN_NAMESPACE_TNODE {
 	
 	bool luaT_execString(lua_State* L, const char* s) {
 		luaL_loadstring(L, s);
-		return luaT_pcall(L, 0);
+		luaT_Value ret;
+		return luaT_pcall(L, 0, ret);
 	}
 	
 	bool luaT_execFile(lua_State* L, const char* filename) {

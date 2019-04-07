@@ -39,12 +39,7 @@ BEGIN_NAMESPACE_TNODE {
 
 	void Service::run() {
 		for (const Servicemessage* msg = this->getMessage(); msg; msg = this->getMessage()) {				
-			auto i = this->_msgfuncs.find(msg->rawmsg.msgid);
-			if (i == this->_msgfuncs.end()) {
-				Error << "Not register msgid: " << msg->rawmsg.msgid << ", service: " << this->id;
-				release_message(msg);
-			}
-			else { // delivery msg to lua
+			{ // delivery msg to lua
 				//int ref = i->second;
 				//luaT_getRegistry(this->_L, ref);
 				//luaT_callFunction(this->_L, msg->fd, msg->rawmsg.entityid, msg->rawmsg.msgid, (const void*)msg);
