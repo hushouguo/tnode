@@ -21,7 +21,7 @@ BEGIN_NAMESPACE_TNODE {
 	void luaT_showversion(lua_State* L);
 	const char* luaT_tostring(lua_State* L, int idx);
 	
-	bool luaT_pcall(lua_State* L, int args);
+	bool luaT_pcall(lua_State* L, int args, luaT_Value& ret);
 	void luaT_getRegistry(lua_State* L, int ref);
 	void luaT_getGlobalFunction(lua_State* L, const char* func);
 		
@@ -87,57 +87,80 @@ BEGIN_NAMESPACE_TNODE {
 	lua_pushcfunction(L, ROUTINE);\
 	lua_rawset(L, -3);
 
-	bool luaT_callFunction(lua_State* L);
+	
+#define LUA_TINTEGER		9
+	
+	// luaT_Value
+	struct luaT_Value {
+		int  type;
+		bool value_bool;
+		lua_Integer value_integer;
+		lua_Number value_float;
+		std::string value_string;
+		// Note: not support table, userdata, function etc ...
+		luaT_Value() : type(LUA_TNIL) {}
+		luaT_Value(bool value) : type(LUA_TBOOLEAN), value_bool(value) {}
+		luaT_Value(lua_Integer value) : type(LUA_TINTEGER), value_integer(value) {}
+		luaT_Value(lua_Number value) : type(LUA_TNUMBER), value_float(value) {}
+		luaT_Value(const char* value) : type(LUA_TSTRING), value_string(value) {}
+		inline void set(bool value) { this->type = LUA_TBOOLEAN; this->value_bool = value; }
+		inline void set(lua_Integer value) { this->type = LUA_TINTEGER; this->value_integer = value; }
+		inline void set(lua_Number value) { this->type = LUA_TNUMBER; this->value_float = static_cast<float>(value); }
+		inline void set(const char* value) { this->type = LUA_TSTRING; this->value_string = value; }
+		template <typename T> void operator = (T value) { this->set(value); }		
+	};	
+
+	bool luaT_callFunction(lua_State* L, luaT_Value&);
 	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-	bool luaT_callFunction(lua_State* L, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6) {
+	bool luaT_callFunction(lua_State* L, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, luaT_Value& ret) {
 		luaT_pushvalue(L, t1);
 		luaT_pushvalue(L, t2);
 		luaT_pushvalue(L, t3);
 		luaT_pushvalue(L, t4);
 		luaT_pushvalue(L, t5);
 		luaT_pushvalue(L, t6);
-		return luaT_pcall(L, 6);
+		return luaT_pcall(L, 6, ret);
 	}
 
 	template <typename T1, typename T2, typename T3, typename T4, typename T5>
-	bool luaT_callFunction(lua_State* L, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5) {
+	bool luaT_callFunction(lua_State* L, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, luaT_Value& ret) {
 		luaT_pushvalue(L, t1);
 		luaT_pushvalue(L, t2);
 		luaT_pushvalue(L, t3);
 		luaT_pushvalue(L, t4);
 		luaT_pushvalue(L, t5);
-		return luaT_pcall(L, 5);
+		return luaT_pcall(L, 5, ret);
 	}
 	
 	template <typename T1, typename T2, typename T3, typename T4>
-	bool luaT_callFunction(lua_State* L, T1 t1, T2 t2, T3 t3, T4 t4) {
+	bool luaT_callFunction(lua_State* L, T1 t1, T2 t2, T3 t3, T4 t4, luaT_Value& ret) {
 		luaT_pushvalue(L, t1);
 		luaT_pushvalue(L, t2);
 		luaT_pushvalue(L, t3);
 		luaT_pushvalue(L, t4);
-		return luaT_pcall(L, 4);
+		return luaT_pcall(L, 4, ret);
 	}
 	
 	template <typename T1, typename T2, typename T3>
-	bool luaT_callFunction(lua_State* L, T1 t1, T2 t2, T3 t3) {
+	bool luaT_callFunction(lua_State* L, T1 t1, T2 t2, T3 t3, luaT_Value& ret) {
 		luaT_pushvalue(L, t1);
 		luaT_pushvalue(L, t2);
 		luaT_pushvalue(L, t3);
-		return luaT_pcall(L, 3);
+		return luaT_pcall(L, 3, ret);
 	}
 	
 	template <typename T1, typename T2>
-	bool luaT_callFunction(lua_State* L, T1 t1, T2 t2) {
+	bool luaT_callFunction(lua_State* L, T1 t1, T2 t2, luaT_Value& ret) {
 		luaT_pushvalue(L, t1);
 		luaT_pushvalue(L, t2);
-		return luaT_pcall(L, 2);
+		return luaT_pcall(L, 2, ret);
 	}
 	
 	template <typename T1>
-	bool luaT_callFunction(lua_State* L, T1 t1) {
+	bool luaT_callFunction(lua_State* L, T1 t1, luaT_Value& ret) {
 		luaT_pushvalue(L, t1);
-		return luaT_pcall(L, 1);
-	}	
+		return luaT_pcall(L, 1, ret);
+	}
 }
 
 #endif

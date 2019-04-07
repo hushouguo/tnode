@@ -6,50 +6,63 @@
 #include "tnode.h"
 
 BEGIN_NAMESPACE_TNODE {
-	ServiceManager::ServiceManager() {
-		memset(this->_services, 0, sizeof(this->_services));
+	bool ServiceManager::init(const char* entryfile) {
+		Service* service = this->newservice(entryfile);
+		CHECK_RETURN(service, false, "ServiceManager init failure");
+		this->_initid = service->id;
+		return true;
 	}
-
+	
 	void ServiceManager::stop() {
-		for (auto& service : this->_services) {
+		while (!this->_services.empty()) {
+			Service* service = this->_services.pop_front();
 			SafeDelete(service);
 		}
 	}
 
 	bool ServiceManager::pushMessage(const Servicemessage* msg) {
-#if 0	
-		//TODO:
-		assert(to < MAX_SERVICE);
-		Service* service = this->_services[to];
-		if (!service) {
-			release_message(msg);
-		}
-		CHECK_RETURN(service, false, "Not found service: %d", to);
-		service->pushMessage(msg);
-		//this->schedule(service);
-#endif		
-		return true;
-	}
+		u32 sid = 0;
+		Service* initservice = this->getService(this->_initid);
+		CHECK_GOTO(initservice, exit_failure, "Not found initservice: %d", this->_initid);
+		
+		luaT_getGlobalFunction(initservice->luaState(), "dispatch");
+		CHECK_GOTO(lua_isfunction(initservice->luaState(), -1), exit_failure, "not found `dispatch` function");
 
-	void ServiceManager::entityfunc(u64 entityid, u32 service, int ref) {
+		if (true) {
+			luaT_Value ret;
+			CHECK_GOTO(
+				luaT_callFunction(initservice->luaState(), msg->rawmsg.entityid, msg->rawmsg.msgid, ret),
+				exit_failure, "call `sid dispatch(entityid, msgid)` failure");
+			luaT_cleanup(initservice->luaState());
+			CHECK_GOTO(ret.type == lua_Integer, exit_failure, "dispatch return error type: %d", ret.type);
+			sid = ret.value_integer;
+		}
+
+		if (true) {
+			Service* service = this->getService(sid);
+			CHECK_GOTO(service, exit_failure, "Not found service: %d", sid);
+			service->pushMessage(msg);
+			//this->schedule(service);
+		}
+
+		return true;
+		
+exit_failure:	
+		release_message(msg);
+		return false;
 	}
 	
-	void ServiceManager::msgfunc(u32 msgid, u32 service, int ref) {
-	}
-	
-	bool ServiceManager::newservice(const char* entryfile) {
-		u32 sid = this->_initid++;
-		CHECK_RETURN(sid < MAX_SERVICE, false, "the number of service cannot exceed %d", MAX_SERVICE);
-		assert(this->_services[sid] == nullptr);
+	Service* ServiceManager::newservice(const char* entryfile) {
+		u32 sid = this->_autoid++;
+		assert(this->_services.containKey(sid) == nullptr);
 		Service* service = new Service(sid);
-		this->_services[sid] = service;
+		this->_services.insert(sid, service);
 		bool result = service->init(entryfile);
 		if (!result) {
+			this->_services.eraseKey(sid);
 			SafeDelete(service);
-			this->_services[sid] = nullptr;
-			return false;
 		}
-		return true;
+		return service;
 	}
 
 	void ServiceManager::schedule(Service* service) {
@@ -59,10 +72,12 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	void ServiceManager::schedule() {
-		for (auto service : this->_services) {
-			if (service != nullptr) {
-				this->schedule(service);
-			}
+		std::vector<Service*> v;
+		this->_services.traverse([&v](u32 sid, Service* service) {
+			v.push_back(service);
+		});
+		for (auto& service : v) {
+			this->schedule(service);
 		}
 	}
 	

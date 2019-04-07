@@ -18,7 +18,8 @@
 17. load static table
 18. hotfix
 19. 把主线程的任务也做成service，主线程
-20. NetworkManager::run, while(true)死循环，阻塞，知道信号量唤醒
+
+21. zero-copy, lockfree
 
 ServiceManager			NetworkManager
 Service                 Socket

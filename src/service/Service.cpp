@@ -45,11 +45,16 @@ BEGIN_NAMESPACE_TNODE {
 				release_message(msg);
 			}
 			else { // delivery msg to lua
-				int ref = i->second;
-				luaT_getRegistry(this->_L, ref);
-				luaT_callFunction(this->_L, msg->fd, msg->rawmsg.entityid, msg->rawmsg.msgid, (const void*)msg);
+				//int ref = i->second;
+				//luaT_getRegistry(this->_L, ref);
+				//luaT_callFunction(this->_L, msg->fd, msg->rawmsg.entityid, msg->rawmsg.msgid, (const void*)msg);
 			}
 		}
+	}
+
+	u32 Service::dispatch(const Servicemessage* msg) {
+		//TODO:
+		return 0;
 	}
 
 	void Service::pushMessage(const Servicemessage* msg) {

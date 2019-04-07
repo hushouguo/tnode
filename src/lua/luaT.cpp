@@ -68,8 +68,7 @@ BEGIN_NAMESPACE_TNODE {
 		return lua_typename(L, lua_type(L, idx));
 	}
 	
-	bool luaT_pcall(lua_State* L, int args) {
-		int traceback = 0, error;
+	bool luaT_pcall(lua_State* L, int args, luaT_Value& ret) {
 		int func_idx = -(args + 1);
 		if (!lua_isfunction(L, func_idx)) {
 			Error.cout("value at stack [%d] is not function\n", func_idx);
@@ -77,6 +76,7 @@ BEGIN_NAMESPACE_TNODE {
 			return false;
 		}
 
+		int traceback = 0;
 		lua_getglobal(L, "__G_TRACKBACK__"); 	/* L: ...func arg1 arg2 ... G */
 		if (!lua_isfunction(L, -1)) {
 			lua_pop(L, 1);						/* L: ...func arg1 arg2 ... */
@@ -86,9 +86,7 @@ BEGIN_NAMESPACE_TNODE {
 			traceback = func_idx - 1;
 		}
 
-		//++stack->call_lua_count;
-		error = lua_pcall(L, args, 1, traceback);
-		//--stack->call_lua_count;
+		int error = lua_pcall(L, args, 1, traceback);
 
 		if (error) {
 			if (traceback == 0) {
@@ -102,17 +100,23 @@ BEGIN_NAMESPACE_TNODE {
 		}
 
 		/* get return value */
-		int ret = 0;
-		if (lua_isnumber(L, -1)) {
-			ret = (int)lua_tointeger(L, -1);
+		if (lua_isboolean(L, -1)) {
+			ret = lua_toboolean(L, -1) != 0;
 		}
-		else if (lua_isboolean(L, -1)) {
-			ret = (int)lua_toboolean(L, -1);
+		else if (lua_isnumber(L, -1)) {
+			lua_Number value = lua_tonumber(L, -1);
+			if (isInteger(value)) {
+				ret = lua_tointeger(L, -1);
+			}
+			else {
+				ret = lua_tonumber(L, -1);
+			}
 		}
-
-		//discard return value
-		if (ret != 0) {
-			Debug.cout("ret: %d\n", ret);
+		else if (lua_isstring(L, -1)) {
+			ret = lua_tostring(L, -1);
+		}
+		else {
+			Alarm << "Not support return type: " << lua_typename(L, lua_type(L, -1));
 		}
 
 		lua_pop(L, 1); /* remove return value from stack, L: ... [G] */
@@ -123,8 +127,8 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	// callFunction
-	bool luaT_callFunction(lua_State* L) {
-		return luaT_pcall(L, 0);
+	bool luaT_callFunction(lua_State* L, luaT_Value& ret) {
+		return luaT_pcall(L, 0, ret);
 	}
 	
 	void luaT_getRegistry(lua_State* L, int ref) {

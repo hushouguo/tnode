@@ -15,12 +15,23 @@ BEGIN_NAMESPACE_TNODE {
 			inline VALUE find(KEY key);
 			inline size_t size();
 			inline bool empty();
+			inline VALUE pop_front();
+			inline void traverse(std::function<void(KEY, VALUE)> invoke);
 
 		private:
 			Spinlocker _locker;
 			std::unordered_map<KEY, VALUE> _map;
 	};
 
+	template <typename KEY, typename VALUE>
+	void LockfreeMap<KEY, VALUE>::traverse(std::function<void(KEY, VALUE)> invoke) {
+		this->_locker.lock();
+		for (auto& i : this->_map) {
+			invoke(i.first, i.second);
+		}
+		this->_locker.unlock();
+	}
+	
 	template <typename KEY, typename VALUE>
 	bool LockfreeMap<KEY, VALUE>::insert(KEY key, VALUE value) {
 		this->_locker.lock();
@@ -58,6 +69,16 @@ BEGIN_NAMESPACE_TNODE {
 		if (i != this->_map.end()) {
 			value = i->second;
 		}
+		this->_locker.unlock();
+		return value;
+	}
+
+	template <typename KEY, typename VALUE>
+	VALUE LockfreeMap<KEY, VALUE>::pop_front() {
+		VALUE value = typename std::unordered_map<KEY, VALUE>::value_type::second_type();
+		this->_locker.lock();
+		value = this->_map.front();
+		this->_map.pop_front();
 		this->_locker.unlock();
 		return value;
 	}

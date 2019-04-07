@@ -6,35 +6,26 @@
 #ifndef __SERVICEMANAGER_H__
 #define __SERVICEMANAGER_H__
 
-#define MAX_SERVICE		512
-
 BEGIN_NAMESPACE_TNODE {
 	class ServiceManager {
-		public:
-			ServiceManager();
-			
 			// multi-thread exclusion
 		public:
-			bool pushMessage(const Servicemessage* msg);		
-			bool newservice(const char* entryfile);
-			inline Service* getService(u32 sid) {
-				return sid < MAX_SERVICE ? this->_services[sid] : nullptr;
-			}
+			bool init(const char* entryfile);
 			void stop();
+			
+		public:
+			bool pushMessage(const Servicemessage* msg);		
+			Service* newservice(const char* entryfile);
+			inline Service* getService(u32 sid) {
+				return this->_services.find(sid);
+			}
 			void schedule();
 			void schedule(Service* service);
 			
 		private:
-			int _initid = 0;
-			Service* _services[MAX_SERVICE];
-
-		public:
-			void entityfunc(u64 entityid, u32 service, int ref);
-			void msgfunc(u32 msgid, u32 service, int ref);
-			
-		private:
-			LockfreeMap<u64, u64> _entityfuncs;
-			LockfreeMap<u32, u64> _msgfuncs;
+			int _autoid = 0;
+			int _initid = -1;
+			LockfreeMap<u32, Service*> _services;
 	};
 }
 

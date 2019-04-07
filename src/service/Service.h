@@ -27,26 +27,10 @@ BEGIN_NAMESPACE_TNODE {
 			std::string _entryfile;
 			lua_State* _L = nullptr;
 			MessageParser* _messageParser = nullptr;
-
-		public:
-			//inline void regfunction(SOCKET s, int ref) {
-			//	this->_regfuncs.insert(std::make_pair(s, ref));
-			//}
-
-			inline void msgfunction(u32 msgid, int ref) {
-				Debug << "reg msg: " << msgid << ", ref: " << ref;
-				this->_msgfuncs.insert(std::make_pair(msgid, ref));
-			}
-
-			inline bool findmsg(u32 msgid) {
-				return this->_msgfuncs.find(msgid) != this->_msgfuncs.end();
-			}
-
-		private:
-			//std::unordered_map<SOCKET, int> _regfuncs;
-			std::unordered_map<u32, int> _msgfuncs;
 		
 		public:
+			u32 dispatch(const Servicemessage* msg);
+			//TODO: bool msgParser(const Servicemessage* msg);
 			void pushMessage(const Servicemessage* msg);
 			inline bool msgQueueEmpty() { return this->_msgQueue.empty(); }
 			
