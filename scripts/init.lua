@@ -1,6 +1,21 @@
-cc.newservice("scripts/server.lua")
+cc.newservice("scripts/register.lua")
+cc.newservice("scripts/register.lua")
 --cc.newservice("scripts/client.lua")
 --cc.newservice("scripts/benchmark.lua")
+
+local fd = cc.newserver("127.0.0.1", 12306)
+if fd ~= -1 then
+	cc.log_trace("server on")
+else
+	cc.log_alarm("newserver error")
+end
+
+local n = 0
 function dispatch(entityid, msgid)
-	return 1
+	n = n + 1
+	if ((n % 2) == 0) then
+		return 1
+	else
+		return 2
+	end
 end

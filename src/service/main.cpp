@@ -213,6 +213,7 @@ int main(int argc, char* argv[]) {
 	}
 
 exit_failure:
+	sConfig.syshalt(0);
 	sServiceManager.stop();
 	sNetworkManager.stop();
 	sThreadPool.stop();
