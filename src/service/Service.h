@@ -7,15 +7,15 @@
 #define __SERVICE_H__
 
 BEGIN_NAMESPACE_TNODE {
-	class Service : public Entry<u32>, public Runnable {
+	class Service : public Runnable {
 		public:
 			Service(u32 id);
-			Service(const char* name);
 			const char* getClassName() override { return "Service"; }
 
 		public:
 			inline lua_State* luaState() { return this->_L; }
 			inline MessageParser* messageParser() { return this->_messageParser; }
+			inline const std::string& entryfile() { return this->_entryfile; }
 
 		public:
 			bool init(const char* entryfile);
@@ -29,8 +29,8 @@ BEGIN_NAMESPACE_TNODE {
 			MessageParser* _messageParser = nullptr;
 		
 		public:
-			u32 dispatch(const Servicemessage* msg);
-			//TODO: bool msgParser(const Servicemessage* msg);
+			u32 dispatch(u64 entityid, u32 msgid);
+			bool msgParser(const Servicemessage* msg);
 			void pushMessage(const Servicemessage* msg);
 			inline bool msgQueueEmpty() { return this->_msgQueue.empty(); }
 			

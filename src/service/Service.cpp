@@ -6,10 +6,7 @@
 #include "tnode.h"
 
 BEGIN_NAMESPACE_TNODE {
-	Service::Service(u32 id) : Entry<u32>(id) {
-	}
-
-	Service::Service(const char* name) : Entry<u32>(hashString(name)) {
+	Service::Service(u32 id) : Runnable(id) {
 	}
 
 	bool Service::init(const char* entryfile) {
@@ -38,18 +35,44 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	void Service::run() {
-		for (const Servicemessage* msg = this->getMessage(); msg; msg = this->getMessage()) {				
-			{ // delivery msg to lua
-				//int ref = i->second;
-				//luaT_getRegistry(this->_L, ref);
-				//luaT_callFunction(this->_L, msg->fd, msg->rawmsg.entityid, msg->rawmsg.msgid, (const void*)msg);
-			}
+		for (const Servicemessage* msg = this->getMessage(); msg; msg = this->getMessage()) {
+			this->msgParser(msg);
+			release_message(msg);
 		}
 	}
 
-	u32 Service::dispatch(const Servicemessage* msg) {
-		//TODO:
-		return 0;
+	//
+	// rc msgParser(fd, entityid, msgid, o)
+	bool Service::msgParser(const Servicemessage* msg) {
+		luaT_getGlobalFunction(this->luaState(), __FUNCTION__);
+		CHECK_RETURN(lua_isfunction(this->luaState(), -1), false, "not found `%s` function", __FUNCTION__);	
+		lua_pushinteger(this->luaState(), msg->fd);
+		lua_pushinteger(this->luaState(), msg->rawmsg.entityid);
+		lua_pushinteger(this->luaState(), msg->rawmsg.msgid);		
+		bool rc = this->messageParser()->decode(this->luaState(), msg->rawmsg.msgid, msg->rawmsg.payload, msg->rawmsg.len - sizeof(Socketmessage));
+		if (rc) {
+			luaT_Value ret;
+			rc = luaT_pcall(this->luaState(), 4, ret);
+		}
+		else {
+			Error << "decode message: " << msg->rawmsg.msgid << " error";
+		}
+		luaT_cleanup(this->luaState());
+		return rc;
+	}
+
+	//
+	// sid dispatch(entityid, msgid)
+	u32 Service::dispatch(u64 entityid, u32 msgid) {
+		luaT_getGlobalFunction(this->luaState(), __FUNCTION__);
+		CHECK_RETURN(lua_isfunction(this->luaState(), -1), ILLEGAL_SERVICE, "not found `%s` function", __FUNCTION__);		
+		luaT_Value ret;
+		CHECK_RETURN(
+			luaT_callFunction(this->luaState(), entityid,msgid, ret),
+			ILLEGAL_SERVICE, "call `sid %s(entityid, msgid)` failure", __FUNCTION__);
+		luaT_cleanup(this->luaState());
+		CHECK_RETURN(ret.isinteger(), ILLEGAL_SERVICE, "`%s` return error type: %d", __FUNCTION__, ret.type);
+		return ret.value_integer;
 	}
 
 	void Service::pushMessage(const Servicemessage* msg) {

@@ -337,56 +337,38 @@ BEGIN_NAMESPACE_TNODE {
 	
 
 	//
-	// fd newserver(address, port, function(fd, entityid, msgid, Servicemessage*))
+	// fd newserver(address, port)
 	static int cc_newserver(lua_State* L) {
 		int args = lua_gettop(L);
 		CHECK_RETURN(args == 3, 0, "`%s` lack args: %d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		CHECK_RETURN(lua_isnumber(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
-		CHECK_RETURN(lua_isfunction(L, -(args - 2)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 2))));
-		
+		CHECK_RETURN(lua_isfunction(L, -(args - 2)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 2))));		
 		const char* address = lua_tostring(L, -args);
-		int port = lua_tointeger(L, -(args - 1));
-
-		//u32 sid = luaT_getOwner(L);
-		//Service* service = sServiceManager.getService(sid);
-		//assert(service);
-		
+		int port = lua_tointeger(L, -(args - 1));		
 		SOCKET fd = sNetworkManager.newserver(address, port);
-		if (fd != -1) {
-			//lua_pushvalue(L, -(args - 2));
-			//int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-			//service->regfunction(fd, ref);
-		}
-		
+		if (fd == -1) {
+			Error << "newserver: " << address << ", port: " << port << " failure";
+		}		
 		lua_pushinteger(L, fd);
 		return 1;
 	}
 
 
 	//
-	// fd newclient(address, port, function(fd, entityid, msgid, Servicemessage*))
+	// fd newclient(address, port)
 	static int cc_newclient(lua_State* L) {
 		int args = lua_gettop(L);
 		CHECK_RETURN(args == 3, 0, "`%s` lack args: %d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		CHECK_RETURN(lua_isnumber(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
-		CHECK_RETURN(lua_isfunction(L, -(args - 2)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 2))));
-		
+		CHECK_RETURN(lua_isfunction(L, -(args - 2)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 2))));		
 		const char* address = lua_tostring(L, -args);
-		int port = lua_tonumber(L, -(args - 1));
-
-		//u32 sid = luaT_getOwner(L);
-		//Service* service = sServiceManager.getService(sid);
-		//assert(service);
-		
+		int port = lua_tonumber(L, -(args - 1));		
 		SOCKET fd = sNetworkManager.newclient(address, port);
-		if (fd != -1) {
-			//lua_pushvalue(L, -(args - 2));
-			//int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-			//service->regfunction(fd, ref);
-		}
-		
+		if (fd == -1) {
+			Error << "newclient: " << address << ", port: " << port << " failure";
+		}		
 		lua_pushinteger(L, fd);
 		return 1;
 	}
@@ -427,52 +409,6 @@ BEGIN_NAMESPACE_TNODE {
 		
 		return 0;
 	}
-
-#if 0
-	//
-	// void entityfunc(entityid, function(fd, entityid, msgid, o)
-	static int cc_entityfunc(lua_State* L) {
-		int args = lua_gettop(L);
-		CHECK_RETURN(args == 2, 0, "`%s` lack args:%d", __FUNCTION__, args);
-		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
-		CHECK_RETURN(lua_isfunction(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
-
-		u64 entityid = lua_tointeger(L, -args);
-
-		u32 sid = luaT_getOwner(L);
-		Service* service = sServiceManager.getService(sid);
-		assert(service);
-
-		lua_pushvalue(L, -(args - 1));
-		int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-
-		sServiceManager.entityfunc(entityid, sid, ref);
-		
-		return 0;
-	}
-
-	//
-	// void msgfunc(msgid, function(fd, entityid, msgid, o))
-	static int cc_msgfunc(lua_State* L) {
-		int args = lua_gettop(L);
-		CHECK_RETURN(args == 2, 0, "`%s` lack args:%d", __FUNCTION__, args);
-		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
-		CHECK_RETURN(lua_isfunction(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
-
-		u32 msgid = lua_tointeger(L, -args);
-
-		u32 sid = luaT_getOwner(L);
-		Service* service = sServiceManager.getService(sid);
-		assert(service);
-
-		lua_pushvalue(L, -(args - 1));
-		int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-
-		sServiceManager.msgfunc(msgid, sid, ref);
-		
-		return 0;
-	}
-#endif
 
 	//
 	// void regmsg(msgid, name)
@@ -522,8 +458,6 @@ BEGIN_NAMESPACE_TNODE {
 		LUA_REGISTER(L, "newserver", cc_newserver);
 		LUA_REGISTER(L, "newclient", cc_newclient);
 		LUA_REGISTER(L, "response", cc_response);
-		//LUA_REGISTER(L, "msgfunc", cc_msgfunc);
-		//LUA_REGISTER(L, "entityfunc", cc_entityfunc);
 		LUA_REGISTER(L, "release_message", cc_release_message);
 		LUA_REGISTER(L, "regmsg", cc_regmsg);
 		LUA_REGISTER(L, "closesocket", cc_closesocket);

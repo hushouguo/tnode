@@ -6,6 +6,8 @@
 #ifndef __SERVICEMANAGER_H__
 #define __SERVICEMANAGER_H__
 
+#define ILLEGAL_SERVICE		u32(-1)
+
 BEGIN_NAMESPACE_TNODE {
 	class ServiceManager {
 		public:
@@ -22,7 +24,7 @@ BEGIN_NAMESPACE_TNODE {
 			void schedule(Service* service);
 			
 		private:
-			int _autoid = 0;
+			int _autoid =  0;
 			int _initid = -1;
 			LockfreeMap<u32, Service*> _services;
 	};

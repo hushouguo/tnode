@@ -2,7 +2,6 @@
 1. closesocket
 2. exitservice
 3. how to cancel ref
-
 5. test and performance
 6. service receive msg to newserver or newclient, or to msgfunc
 7. lua release_message
@@ -11,18 +10,12 @@
 10. test multi-thread exclusion
 11. check schedule, spacial for NetworkManager
 12. how to cleanup resource when system halt
-
 14. db agent
 15. remains lua apis
 16. next monday, debug communicate with client
 17. load static table
 18. hotfix
 19. 把主线程的任务也做成service，主线程
-
 21. zero-copy, lockfree
-
-ServiceManager			NetworkManager
-Service                 Socket
-1. 如果有超过1个service注册了消息怎么投递？ c#的event和action是都处理, entityid, msgid
-2. 怎么负载均衡
-通过注册entityid和msgid两层来分发
+22. 重构包含文件
+23. 怎么负载均衡

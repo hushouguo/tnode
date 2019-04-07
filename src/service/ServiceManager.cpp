@@ -24,23 +24,13 @@ BEGIN_NAMESPACE_TNODE {
 		u32 sid = 0;
 		Service* initservice = this->getService(this->_initid);
 		CHECK_GOTO(initservice, exit_failure, "Not found initservice: %d", this->_initid);
+
+		sid = initservice->dispatch(msg->rawmsg.entityid, msg->rawmsg.msgid);
+		CHECK_GOTO(sid != ILLEGAL_SERVICE, exit_failure, "initservice: %s call `dispatch` error", initservice->entryfile.c_str());
 		
-		luaT_getGlobalFunction(initservice->luaState(), "dispatch");
-		CHECK_GOTO(lua_isfunction(initservice->luaState(), -1), exit_failure, "not found `dispatch` function");
-
-		if (true) {
-			luaT_Value ret;
-			CHECK_GOTO(
-				luaT_callFunction(initservice->luaState(), msg->rawmsg.entityid, msg->rawmsg.msgid, ret),
-				exit_failure, "call `sid dispatch(entityid, msgid)` failure");
-			luaT_cleanup(initservice->luaState());
-			CHECK_GOTO(ret.isinteger(), exit_failure, "dispatch return error type: %d", ret.type);
-			sid = ret.value_integer;
-		}
-
 		if (true) {
 			Service* service = this->getService(sid);
-			CHECK_GOTO(service, exit_failure, "Not found service: %d", sid);
+			CHECK_GOTO(service, exit_failure, "Not found dispatch service: %d", sid);
 			service->pushMessage(msg);
 			//this->schedule(service);
 		}

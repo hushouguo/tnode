@@ -11,7 +11,11 @@
 BEGIN_NAMESPACE_TNODE {
 	class NetworkManager : public Runnable {
 		public:
+			NetworkManager() : Runnable(0) {}
+			
+		public:
 			void init();
+			const char* getClassName() override { return "NetworkManager"; }
 
 			// multi-thread exclusion
 		public:
