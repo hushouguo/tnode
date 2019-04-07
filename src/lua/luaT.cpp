@@ -116,7 +116,7 @@ BEGIN_NAMESPACE_TNODE {
 			ret = lua_tostring(L, -1);
 		}
 		else {
-			Alarm << "Not support return type: " << lua_typename(L, lua_type(L, -1));
+			//Alarm << "Not support return type: " << lua_typename(L, lua_type(L, -1));
 		}
 
 		lua_pop(L, 1); /* remove return value from stack, L: ... [G] */
