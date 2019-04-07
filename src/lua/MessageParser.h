@@ -17,7 +17,7 @@ BEGIN_NAMESPACE_TNODE {
 			virtual size_t ByteSizeLong(u32 msgid) = 0;
 			virtual bool encode(lua_State* L, u32 msgid, void* buf, size_t& bufsize) = 0;
 			virtual bool encode(lua_State* L, u32 msgid, std::string& out) = 0;
-			virtual bool decode(lua_State* L, u32 msgid, void* buf, size_t bufsize) = 0;
+			virtual bool decode(lua_State* L, u32 msgid, const void* buf, size_t bufsize) = 0;
 			virtual bool decode(lua_State* L, u32 msgid, const std::string& in) = 0;
 	};
 

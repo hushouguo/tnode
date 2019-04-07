@@ -85,36 +85,34 @@ BEGIN_NAMESPACE_TNODE {
 
 	bool SocketInternal::send() {
 		if (!this->_slocker.test_and_set()) {	// set OK, return false
-			while (true) {
-				if (this->_wbuffer.size() > 0) {
-					ssize_t bytes = this->sendBytes(this->_wbuffer.rbuffer(), this->_wbuffer.size());
-					CHECK_RETURN(bytes >= 0, false, "sendBytes error");
-					if (size_t(bytes) > 0) {
-						this->_wbuffer.rlength(size_t(bytes));
-					}
+			if (this->_wbuffer.size() > 0) {
+				ssize_t bytes = this->sendBytes(this->_wbuffer.rbuffer(), this->_wbuffer.size());
+				CHECK_RETURN(bytes >= 0, false, "sendBytes error");
+				if (size_t(bytes) > 0) {
+					this->_wbuffer.rlength(size_t(bytes));
 				}
-			
-				if (this->_wbuffer.size() > 0) {
-					return true;	// wbuffer did not send all
-				}
-			
-				while (!this->_slist.empty()) {
-					const Servicemessage* message = this->_slist.pop_front();
-					ssize_t bytes = this->sendBytes((const Byte*) &message->rawmsg, message->rawmsg.len);
-					if (bytes < 0) {
-						release_message(message);
-						CHECK_RETURN(bytes >= 0, false, "sendBytes error");
-					}
+			}
 
-					if (size_t(bytes) < message->rawmsg.len) {
-						this->_wbuffer.append((const Byte*) (&message->rawmsg) + bytes, message->rawmsg.len - bytes);
-					}
+			if (this->_wbuffer.size() > 0) {
+				return true;	// wbuffer did not send all
+			}
 
+			while (!this->_slist.empty()) {
+				const Servicemessage* message = this->_slist.pop_front();
+				ssize_t bytes = this->sendBytes((const Byte*) &message->rawmsg, message->rawmsg.len);
+				if (bytes < 0) {
 					release_message(message);
-					
-					if (this->_wbuffer.size() > 0) {
-						return true;	// send wouldblock
-					}
+					CHECK_RETURN(bytes >= 0, false, "sendBytes error");
+				}
+
+				if (size_t(bytes) < message->rawmsg.len) {
+					this->_wbuffer.append((const Byte*) (&message->rawmsg) + bytes, message->rawmsg.len - bytes);
+				}
+
+				release_message(message);
+
+				if (this->_wbuffer.size() > 0) {
+					return true;	// send wouldblock
 				}
 			}
 		}

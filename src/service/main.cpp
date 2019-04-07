@@ -204,7 +204,7 @@ int main(int argc, char* argv[]) {
 
 	sThreadPool.init(sConfig.threads);
 	sNetworkManager.init();
-	CHECK_GOTO(sServiceManager.newservice(sConfig.get("tnode.entryfile", "N/A")), exit_failure, "ServiceManager init failure");
+	CHECK_GOTO(sServiceManager.init(sConfig.get("tnode.entryfile", "N/A")), exit_failure, "ServiceManager init failure");
 
 	while (!sConfig.halt) {
 		sTime.now();

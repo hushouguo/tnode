@@ -340,10 +340,9 @@ BEGIN_NAMESPACE_TNODE {
 	// fd newserver(address, port)
 	static int cc_newserver(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args == 3, 0, "`%s` lack args: %d", __FUNCTION__, args);
+		CHECK_RETURN(args == 2, 0, "`%s` lack args: %d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		CHECK_RETURN(lua_isnumber(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
-		CHECK_RETURN(lua_isfunction(L, -(args - 2)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 2))));		
 		const char* address = lua_tostring(L, -args);
 		int port = lua_tointeger(L, -(args - 1));		
 		SOCKET fd = sNetworkManager.newserver(address, port);
@@ -359,10 +358,9 @@ BEGIN_NAMESPACE_TNODE {
 	// fd newclient(address, port)
 	static int cc_newclient(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args == 3, 0, "`%s` lack args: %d", __FUNCTION__, args);
+		CHECK_RETURN(args == 2, 0, "`%s` lack args: %d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		CHECK_RETURN(lua_isnumber(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));
-		CHECK_RETURN(lua_isfunction(L, -(args - 2)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 2))));		
 		const char* address = lua_tostring(L, -args);
 		int port = lua_tonumber(L, -(args - 1));		
 		SOCKET fd = sNetworkManager.newclient(address, port);

@@ -24,7 +24,7 @@ BEGIN_NAMESPACE_TNODE {
 		public:
 			bool encode(lua_State* L, u32 msgid, void* buf, size_t& bufsize) override;
 			bool encode(lua_State* L, u32 msgid, std::string& out) override;
-			bool decode(lua_State* L, u32 msgid, void* buf, size_t bufsize) override;
+			bool decode(lua_State* L, u32 msgid, const void* buf, size_t bufsize) override;
 			bool decode(lua_State* L, u32 msgid, const std::string& in) override;
 
 		private:
@@ -494,7 +494,7 @@ BEGIN_NAMESPACE_TNODE {
 		return true;
 	}
 
-	bool MessageParserInternal::decode(lua_State* L, u32 msgid, void* buf, size_t bufsize) {
+	bool MessageParserInternal::decode(lua_State* L, u32 msgid, const void* buf, size_t bufsize) {
 		Message* message = this->FindMessage(msgid);
 		CHECK_RETURN(message, false, "Not found message: %d", msgid);
 		message->Clear();

@@ -26,7 +26,7 @@ BEGIN_NAMESPACE_TNODE {
 		CHECK_GOTO(initservice, exit_failure, "Not found initservice: %d", this->_initid);
 
 		sid = initservice->dispatch(msg->rawmsg.entityid, msg->rawmsg.msgid);
-		CHECK_GOTO(sid != ILLEGAL_SERVICE, exit_failure, "initservice: %s call `dispatch` error", initservice->entryfile.c_str());
+		CHECK_GOTO(sid != ILLEGAL_SERVICE, exit_failure, "initservice: %s call `dispatch` error", initservice->entryfile().c_str());
 		
 		if (true) {
 			Service* service = this->getService(sid);
