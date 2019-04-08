@@ -80,7 +80,7 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	bool Service::need_schedule() {
-		return this->_msgQueue.empty();
+		return this->_msgQueue.empty() == false;
 	}
 	
 	const Servicemessage* Service::getMessage() {

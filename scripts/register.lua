@@ -5,6 +5,7 @@ cc.log_trace("service: " .. _G["cc.service"])
 --cc.regmsg(60005, "NetData.Heartbeat")
 cc.regmsg(1, "protocol.EchoRequest")
 cc.regmsg(2, "protocol.EchoResponse")
+local total = 0
 function msgParser(fd, entityid, msgid, o)
 	cc.log_trace("service: " .. _G["cc.service"] .. ", fd: " .. fd .. ", entityid: " .. entityid .. ", msgid: " .. msgid)
 	if (msgid == 1) then
@@ -20,5 +21,10 @@ function msgParser(fd, entityid, msgid, o)
 			value_sint64 = o.value_sint64,
 			value_uint64 = o.value_uint64
 		})
+		total = total + 1
+		if (total >= 5) then
+			cc.closesocket(fd)
+			cc.exitservice()
+		end
 	end
 end
