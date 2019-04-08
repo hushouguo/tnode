@@ -81,6 +81,9 @@ BEGIN_NAMESPACE_TNODE {
 		Message* message = FindOrNull(this->_messages, msgid);
 		CHECK_RETURN(message == nullptr, false, "duplicate regmsg: %d, name: %s", msgid, name);
 		message = this->NewMessage(msgid, name);
+		if (message) {
+			Debug << "regmsg: " << name << ", ByteSizeLong: " << message->ByteSizeLong();
+		}
 		return message != nullptr;
 	}
 
