@@ -91,6 +91,7 @@ BEGIN_NAMESPACE_TNODE {
 	}	
 
 	bool SocketInternal::send() {
+		// NOTE: Potential possibility, after slist.push_back, and in another thread, send() finish just now
 		if (!this->_slocker.test_and_set()) {	// set OK, return false
 			lock_guard guard(&this->_slocker);
 			

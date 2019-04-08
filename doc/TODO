@@ -8,15 +8,18 @@
 8. message how to manage avoid leak
 9. check multi-thread exclusion
 10. test multi-thread exclusion
-11. check schedule, spacial for NetworkManager
+
 12. how to cleanup resource when system halt
 14. db agent
 15. remains lua apis
 16. next monday, debug communicate with client
-17. load static table
+17. load static table and convert excel to lua, json
 18. hotfix
 19. 把主线程的任务也做成service，主线程
 21. zero-copy, lockfree
 22. 重构包含文件
-23. 怎么负载均衡
-timer, onSocketAccept, onClientConnected, onSocketShutdown
+
+timer, 
+onSocketAccept, onClientConnected, onSocketShutdown
+
+GatewayServer, RecordServer

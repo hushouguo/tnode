@@ -21,6 +21,7 @@ BEGIN_NAMESPACE_TNODE {
 			bool init(const char* entryfile);
 			void stop();
 			void run() override;
+			bool need_schedule();
 
 		private:
 			bool _isstop = false;
@@ -33,7 +34,6 @@ BEGIN_NAMESPACE_TNODE {
 			u32 dispatch(u64 entityid, u32 msgid);
 			bool msgParser(const Servicemessage* msg);
 			void pushMessage(const Servicemessage* msg);
-			inline bool msgQueueEmpty() { return this->_msgQueue.empty(); }
 			
 		private:
 			LockfreeQueue<const Servicemessage*> _msgQueue;

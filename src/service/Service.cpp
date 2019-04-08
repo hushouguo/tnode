@@ -80,6 +80,10 @@ BEGIN_NAMESPACE_TNODE {
 	void Service::pushMessage(const Servicemessage* msg) {
 		this->_msgQueue.push_back(msg);
 	}
+
+	bool Service::need_schedule() {
+		return this->_msgQueue.empty();
+	}
 	
 	const Servicemessage* Service::getMessage() {
 		return this->_msgQueue.empty() ? nullptr : this->_msgQueue.pop_front();

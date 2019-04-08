@@ -20,6 +20,9 @@ BEGIN_NAMESPACE_TNODE {
 			inline Service* getService(u32 sid) {
 				return this->_services.find(sid);
 			}
+			bool exitservice(u32 sid);
+
+		public:
 			void schedule();
 			void schedule(Service* service);
 			

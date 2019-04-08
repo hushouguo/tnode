@@ -331,7 +331,10 @@ BEGIN_NAMESPACE_TNODE {
 	//
 	// void exitservice()
 	static int cc_exitservice(lua_State* L) {
-		//TODO: exit current service
+		u32 sid = luaT_getOwner(L);
+		Service* service = sServiceManager.getService(sid);
+		assert(service);
+		sServiceManager.exitserver(sid);	
 		return 0;
 	}
 	
@@ -445,7 +448,11 @@ BEGIN_NAMESPACE_TNODE {
 	//
 	// void closesocket(fd)
 	static int cc_closesocket(lua_State* L) {
-		//TODO: close socket
+		int args = lua_gettop(L);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(lua_isinteger(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
+		SOCKET fd = lua_tointeger(L, -args);
+		sNetworkManager.closesocket(fd, "LUA");
 		return 0;
 	}
 	

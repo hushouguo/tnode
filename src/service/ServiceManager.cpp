@@ -32,7 +32,8 @@ BEGIN_NAMESPACE_TNODE {
 			Service* service = this->getService(sid);
 			CHECK_GOTO(service, exit_failure, "Not found dispatch service: %d", sid);
 			service->pushMessage(msg);
-			//this->schedule(service);
+			
+			this->schedule(service);	// schedule service right now
 		}
 
 		return true;
@@ -52,11 +53,21 @@ exit_failure:
 			this->_services.eraseKey(sid);
 			SafeDelete(service);
 		}
+		Debug << "new service: " << sid;
 		return service;
 	}
 
+	bool ServiceManager::exitservice(u32 sid) {
+		Service* service = this->getService(sid);
+		CHECK_RETURN(service, false, "not found service: %d", sid);
+		this->_services.eraseKey(sid);
+		SafeDelete(service);
+		Debug << "exit service: " << sid;
+		return true;
+	}
+
 	void ServiceManager::schedule(Service* service) {
-		if (!service->msgQueueEmpty()) {
+		if (service->need_schedule()) {
 			service->schedule();
 		}
 	}

@@ -17,7 +17,6 @@ BEGIN_NAMESPACE_TNODE {
 			void init();
 			const char* getClassName() override { return "NetworkManager"; }
 
-			// multi-thread exclusion
 		public:
 			bool sendMessage(const Servicemessage* message);
 			void closeSocket(SOCKET s, const char* reason);
