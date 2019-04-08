@@ -14,7 +14,7 @@ BEGIN_NAMESPACE_TNODE {
 			}
 
 			bool trylock() {
-				return !this->_flag->test_and_set(std::memory_order_acquire);// set OK, return false
+				return !this->_locker.test_and_set(std::memory_order_acquire);// set OK, return false
 			}
 
 			void unlock() {
@@ -28,11 +28,11 @@ BEGIN_NAMESPACE_TNODE {
 		Spinlocker* _locker = nullptr;
 		public:
 			SpinlockerGuard(Spinlocker* locker) : _locker(locker) {
-				this->_locker.lock();
+				this->_locker->lock();
 			}
 			
 			~SpinlockerGuard() {
-				this->_locker.unlock();
+				this->_locker->unlock();
 			}
 	};
 }
