@@ -85,7 +85,7 @@ exit_failure:
 		});
 
 		for (auto& service : shutlist) {
-			this->_service.eraseKey(service->id);
+			this->_services.eraseKey(service->id);
 			Debug << "destroy service: " << service->id;
 			SafeDelete(service);
 		}
