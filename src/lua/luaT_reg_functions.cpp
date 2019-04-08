@@ -445,6 +445,26 @@ BEGIN_NAMESPACE_TNODE {
 		return 0;
 	}
 	
+	//
+	// void newtimer(milliseconds, function(milliseconds) end)
+	static int cc_newtimer(lua_State* L) {
+		int args = lua_gettop(L);
+		CHECK_RETURN(args == 2, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
+		CHECK_RETURN(lua_isfunction(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));		
+
+		u32 sid = luaT_getOwner(L);
+		Service* service = sServiceManager.getService(sid);
+		assert(service);
+		
+		lua_Integer milliseconds = lua_tointeger(L, -1);
+		lua_pushvalue(L, -(args - 1));
+		int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+		
+		return 0;
+	}
+	
 	void luaT_reg_functions(lua_State* L) {
 		luaT_beginNamespace(L, LUA_REGISTER_NAMESPACE);
 
@@ -498,9 +518,10 @@ BEGIN_NAMESPACE_TNODE {
 		// message parser
 		LUA_REGISTER(L, "message_encode", cc_message_encode);
 		LUA_REGISTER(L, "message_decode", cc_message_decode);
-
 		
-		//TODO: timer
+		// timer
+		LUA_REGISTER(L, "newtimer", cc_newtimer);
+		
 		//TODO: file i/o
 		//TODO: http
 		//TODO: curl

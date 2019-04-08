@@ -39,6 +39,8 @@ BEGIN_NAMESPACE_TNODE {
 			this->msgParser(msg);
 			release_message(msg);
 		}
+
+		
 	}
 
 	//
@@ -81,6 +83,17 @@ BEGIN_NAMESPACE_TNODE {
 	
 	const Servicemessage* Service::getMessage() {
 		return this->_msgQueue.empty() ? nullptr : this->_msgQueue.pop_front();
+	}
+
+	void Service::regtimer(u32 milliseconds, int ref) {
+		CHECK_RETURN(milliseconds > 0, void(0), "timer interval MUST greater than 0");
+		timer_struct* ts = new timer_struct();
+		sTime.now();
+		ts->last_check = sTime.milliseconds();
+		ts->milliseconds = milliseconds;
+		ts->type = timer_forever;
+		ts->ref = ref;
+		this->_timerQueue.push_back(ts);
 	}
 }
 

@@ -15,11 +15,21 @@ BEGIN_NAMESPACE_TNODE {
 			inline T pop_front();
 			inline size_t size();
 			inline bool empty();
+			inline void traverse(std::function<void(T)> invoke);
 
 		private:
 			Spinlocker _locker;
 			std::list<T> _list;
 	};
+
+	template <typename T>
+	void LockfreeQueue<T>::traverse(std::function<void(T)> invoke) {
+		this->_locker.lock();
+		for (auto& i : this->_list) {
+			invoke(i);
+		}
+		this->_locker.unlock();
+	}
 
 	template <typename T> void LockfreeQueue<T>::push_back(T node) {
 		this->_locker.lock();
