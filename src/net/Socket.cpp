@@ -85,6 +85,7 @@ BEGIN_NAMESPACE_TNODE {
 
 	bool SocketInternal::send() {
 		if (!this->_slocker.test_and_set()) {	// set OK, return false
+			lock_guard guard(&this->_slocker);
 			if (this->_wbuffer.size() > 0) {
 				ssize_t bytes = this->sendBytes(this->_wbuffer.rbuffer(), this->_wbuffer.size());
 				CHECK_RETURN(bytes >= 0, false, "sendBytes error");
@@ -114,7 +115,7 @@ BEGIN_NAMESPACE_TNODE {
 				if (this->_wbuffer.size() > 0) {
 					return true;	// send wouldblock
 				}
-			}
+			}			
 		}
 		return true;
 	}
@@ -168,6 +169,7 @@ BEGIN_NAMESPACE_TNODE {
 				bytes += rc;
 			}			
 		}
+		Debug << "Socket: " << this->fd() << " sendBytes: " << bytes << ", expect: " << len;
 		return bytes;
 	}
 	
