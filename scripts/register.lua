@@ -11,7 +11,7 @@ function msgParser(fd, entityid, msgid, o)
 		cc.log_trace("o: ")
 		dump(o)
 		cc.response(fd, entityid, 2, {
-			value_bool = not o.value_bool,
+			value_bool = o.value_bool,
 			value_string = "protocol.EchoResponse",
 			value_float = o.value_float,
 			value_double = o.value_double,

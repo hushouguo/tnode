@@ -16,6 +16,7 @@ BEGIN_NAMESPACE_TNODE {
 		u32 len;
 		u64 entityid;
 		u16 msgid;
+		u16 flags;
 		Byte payload[0];
 	};
 #pragma pack(pop)
