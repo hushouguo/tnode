@@ -64,15 +64,22 @@ BEGIN_NAMESPACE_TNODE {
 		ByteBuffer& buffer = this->_rbuffer;
 		while (true) {
 			Socketmessage* rawmsg = (Socketmessage*) (buffer.rbuffer());
-			if (buffer.size() >= sizeof(rawmsg->len) && buffer.size() >= rawmsg->len) {
-				Servicemessage* newmsg = allocate_message(rawmsg->len);
-				newmsg->fd = this->fd();
-				memcpy(&newmsg->rawmsg, rawmsg, rawmsg->len);
-				this->_rlist.push_back(newmsg);
-				
-				buffer.rlength(rawmsg->len);
+			if (buffer.size() < sizeof(rawmsg->len) || buffer.size() < rawmsg->len) {
+				return true;	// not enough data
 			}
-			else { break; }
+
+			if (rawmsg->len < sizeof(Socketmessage)) {
+				Error << "illegal package, len: " << rawmsg->len << ", at least: " << sizeof(Socketmessage);
+				return false;	// illegal package
+			}
+
+			// got a new message
+			Servicemessage* newmsg = allocate_message(rawmsg->len);	// Note: rawmsg->len - sizeof(Socketmessage)
+			newmsg->fd = this->fd();
+			memcpy(&newmsg->rawmsg, rawmsg, rawmsg->len);
+			this->_rlist.push_back(newmsg);
+			
+			buffer.rlength(rawmsg->len);
 		}
 		
 		return true;	
@@ -86,6 +93,7 @@ BEGIN_NAMESPACE_TNODE {
 	bool SocketInternal::send() {
 		if (!this->_slocker.test_and_set()) {	// set OK, return false
 			lock_guard guard(&this->_slocker);
+			
 			if (this->_wbuffer.size() > 0) {
 				ssize_t bytes = this->sendBytes(this->_wbuffer.rbuffer(), this->_wbuffer.size());
 				CHECK_RETURN(bytes >= 0, false, "sendBytes error");
@@ -169,7 +177,7 @@ BEGIN_NAMESPACE_TNODE {
 				bytes += rc;
 			}			
 		}
-		Debug << "Socket: " << this->fd() << " sendBytes: " << bytes << ", expect: " << len;
+		//Debug << "Socket: " << this->fd() << " sendBytes: " << bytes << ", expect: " << len;
 		return bytes;
 	}
 	

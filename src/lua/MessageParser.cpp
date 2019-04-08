@@ -81,9 +81,6 @@ BEGIN_NAMESPACE_TNODE {
 		Message* message = FindOrNull(this->_messages, msgid);
 		CHECK_RETURN(message == nullptr, false, "duplicate regmsg: %d, name: %s", msgid, name);
 		message = this->NewMessage(msgid, name);
-		if (message) {
-			Debug << "regmsg: " << name << ", ByteSizeLong: " << message->ByteSizeLong();
-		}
 		return message != nullptr;
 	}
 	
@@ -92,13 +89,6 @@ BEGIN_NAMESPACE_TNODE {
 	}
 	
 	Message* MessageParserInternal::NewMessage(u32 msgid, const char* name) {
-//		uint32_t id = hashString(name);
-//		auto i = this->_messages.find(id);
-//		if (i != this->_messages.end()) {
-//			i->second->Clear();
-//			return i->second;
-//		}
-
 		Message* message = this->FindMessage(msgid);
 		if (message) {
 			return message;
