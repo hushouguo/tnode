@@ -389,25 +389,26 @@ BEGIN_NAMESPACE_TNODE {
 		Service* service = sServiceManager.getService(sid);
 		assert(service);
 
-		size_t ByteSizeLong = service->messageParser()->ByteSizeLong(msgid);
-		//CHECK_RETURN(ByteSizeLong > 0, 0, "msg: %d not found", msgid);
-		if (ByteSizeLong == 0) {
-			ByteSizeLong = 65535;
+		google::protobuf::Message* message = service->messageParser()->encode(L, msgid);
+		CHECK_RETURN(message, 0, "encode message: %d error", msgid);
+
+		size_t byteSize = message->ByteSize();		
+		Servicemessage* msg = allocate_message(byteSize);
+
+		bool rc = message->SerializeToArray(msg->rawmsg.payload, byteSize);
+		if (!rc) {
+			release_message(msg);
+			Error.cout("Serialize message:%s failure, byteSize:%ld", message->GetTypeName().c_str(), byteSize);
+			return 0;
 		}
 		
-		Servicemessage* message = allocate_message(ByteSizeLong);
-		size_t payload_len = ByteSizeLong;
-		bool retval = service->messageParser()->encode(L, msgid, message->rawmsg.payload, payload_len);
-		CHECK_RETURN(retval, 0, "encode message: %d error", msgid);
-		assert(payload_len <= ByteSizeLong);
-
-		message->fd = fd;
-		message->rawmsg.entityid = entityid;
-		message->rawmsg.msgid = msgid;
-		message->rawmsg.len = payload_len + sizeof(Socketmessage);
+		msg->fd = fd;
+		msg->rawmsg.entityid = entityid;
+		msg->rawmsg.msgid = msgid;
+		msg->rawmsg.flags = 0;
+		msg->rawmsg.len = byteSize + sizeof(Socketmessage);
 		
-		sNetworkManager.sendMessage(message);
-		
+		sNetworkManager.sendMessage(message);		
 		return 0;
 	}
 
@@ -427,10 +428,6 @@ BEGIN_NAMESPACE_TNODE {
 		const char* name = lua_tostring(L, -(args - 1));
 		bool retval = service->messageParser()->regmsg(msgid, name);
 		CHECK_RETURN(retval, 0, "regmsg: %d, %s failure", msgid, name);
-		if (true) {
-			size_t ByteSizeLong = service->messageParser()->ByteSizeLong(msgid);
-			Debug << "regmsg: " << msgid << ", desc: " << name << ", ByteSizeLong: " << ByteSizeLong;
-		}
 		return 0;
 	}
 

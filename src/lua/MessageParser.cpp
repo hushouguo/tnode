@@ -19,13 +19,13 @@ BEGIN_NAMESPACE_TNODE {
 		public:
 			bool load(const char* filename) override;/* filename also is directory */
 			bool regmsg(u32 msgid, const char* name) override;
-			size_t ByteSizeLong(u32 msgid) override;
 
 		public:
 			bool encode(lua_State* L, u32 msgid, void* buf, size_t& bufsize) override;
 			bool encode(lua_State* L, u32 msgid, std::string& out) override;
 			bool decode(lua_State* L, u32 msgid, const void* buf, size_t bufsize) override;
 			bool decode(lua_State* L, u32 msgid, const std::string& in) override;
+			google::protobuf::Message* encode(lua_State* L, u32 msgid) overide;
 
 		private:
 			DiskSourceTree _tree;
@@ -85,12 +85,6 @@ BEGIN_NAMESPACE_TNODE {
 			Debug << "regmsg: " << name << ", ByteSizeLong: " << message->ByteSizeLong();
 		}
 		return message != nullptr;
-	}
-
-	size_t MessageParserInternal::ByteSizeLong(u32 msgid) {
-		Message* message = this->FindMessage(msgid);
-		CHECK_RETURN(message, 0, "not reg msg: %d", msgid);
-		return message->ByteSizeLong();
 	}
 	
 	Message* MessageParserInternal::FindMessage(u32 msgid) {
@@ -239,6 +233,27 @@ BEGIN_NAMESPACE_TNODE {
 			}
 		}
 		return true;
+	}
+
+	google::protobuf::Message* MessageParserInternal::encode(lua_State* L, u32 msgid) {
+		Message* message = this->FindMessage(msgid);
+		CHECK_RETURN(message, nullptr, "Not found message: %d", msgid);
+		message->Clear();
+
+		const Descriptor* descriptor = this->_in->pool()->FindMessageTypeByName(message->GetTypeName());
+		CHECK_RETURN(descriptor, nullptr, "not found descriptor for message: %s", message->GetTypeName().c_str());
+		assert(message->ByteSize() == 0);
+		try {
+			if (!this->encodeDescriptor(L, message, descriptor, message->GetReflection())) {
+				Error << "encodeDescriptor failure for message: " << message->GetTypeName();
+				return nullptr;
+			}
+		}
+		catch(std::exception& e) {
+			CHECK_RETURN(false, nullptr, "encodeDescriptor exception:%s", e.what());
+		}
+
+		return message;
 	}
 
 	bool MessageParserInternal::encode(lua_State* L, u32 msgid, void* buf, size_t& bufsize) {
