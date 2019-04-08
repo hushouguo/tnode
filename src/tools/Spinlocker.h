@@ -14,7 +14,7 @@ BEGIN_NAMESPACE_TNODE {
 			}
 
 			bool trylock() {
-				return !this->_flag->test_and_set();
+				return !this->_flag->test_and_set(std::memory_order_acquire);// set OK, return false
 			}
 
 			void unlock() {
@@ -23,31 +23,18 @@ BEGIN_NAMESPACE_TNODE {
 		private:
 			std::atomic_flag _locker = ATOMIC_FLAG_INIT;
 	};
-#if 0
+
 	class SpinlockerGuard {
-		std::atomic_flag* _flag = nullptr;
+		Spinlocker* _locker = nullptr;
 		public:
-			void lock() {
-				while (this->trylock());
+			SpinlockerGuard(Spinlocker* locker) : _locker(locker) {
+				this->_locker.lock();
 			}
-
-			bool trylock() {
-				return !this->_flag->test_and_set();
+			
+			~SpinlockerGuard() {
+				this->_locker.unlock();
 			}
-
-			void unlock() {
-				this->_flag->clear();
-			}
-
-		public:
-			lock_guard(std::atomic_flag* flag) : _flag(flag) {
-			}
-
-			~lock_guard() {
-				this->unlock();
-			}		
 	};
-#endif	
 }
 
 #endif

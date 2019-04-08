@@ -35,10 +35,14 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	void Service::run() {
-		for (const Servicemessage* msg = this->getMessage(); msg; msg = this->getMessage()) {
+		while (!this->isstop()) {
+			const Servicemessage* msg = this->getMessage();
+			if (!msg) {
+				break;
+			}
 			this->msgParser(msg);
 			release_message(msg);
-		}		
+		}
 	}
 
 	//
@@ -80,7 +84,7 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	bool Service::need_schedule() {
-		return this->_msgQueue.empty() == false;
+		return !this->isstop() && this->_msgQueue.empty() == false;
 	}
 	
 	const Servicemessage* Service::getMessage() {

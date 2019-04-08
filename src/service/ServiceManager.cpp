@@ -74,11 +74,23 @@ exit_failure:
 	}
 
 	void ServiceManager::schedule() {
-		std::vector<Service*> v;
+		std::vector<Service*> schelist, shutlist;
 		this->_services.traverse([&v](u32 sid, Service* service) {
-			v.push_back(service);
+			if (service->isstop()) {
+				shutlist.push_back(service);
+			}
+			else {
+				schelist.push_back(service);
+			}
 		});
-		for (auto& service : v) {
+
+		for (auto& service : shutlist) {
+			this->_service.eraseKey(service->id);
+			Debug << "destroy service: " << service->id;
+			SafeDelete(service);
+		}
+		
+		for (auto& service : schelist) {
 			this->schedule(service);
 		}
 	}

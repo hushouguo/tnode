@@ -25,7 +25,8 @@ BEGIN_NAMESPACE_TNODE {
 		private:
 			SOCKET _fd = -1;
 			int _socket_type = -1;
-			std::atomic_flag _slocker = ATOMIC_FLAG_INIT;
+			Spinlocker _slocker;
+			//std::atomic_flag _slocker = ATOMIC_FLAG_INIT;
 			LockfreeQueue<const Servicemessage*> _rlist, _slist;
 
 		private:			
@@ -91,41 +92,39 @@ BEGIN_NAMESPACE_TNODE {
 	}	
 
 	bool SocketInternal::send() {
-		// NOTE: Potential possibility, after slist.push_back, and in another thread, send() finish just now
-		if (!this->_slocker.test_and_set()) {	// set OK, return false
-			lock_guard guard(&this->_slocker);
-			
-			if (this->_wbuffer.size() > 0) {
-				ssize_t bytes = this->sendBytes(this->_wbuffer.rbuffer(), this->_wbuffer.size());
-				CHECK_RETURN(bytes >= 0, false, "sendBytes error");
-				if (size_t(bytes) > 0) {
-					this->_wbuffer.rlength(size_t(bytes));
-				}
+		SpinlockerGuard guard(&this->_slocker);
+					
+		if (this->_wbuffer.size() > 0) {
+			ssize_t bytes = this->sendBytes(this->_wbuffer.rbuffer(), this->_wbuffer.size());
+			CHECK_RETURN(bytes >= 0, false, "sendBytes error");
+			if (size_t(bytes) > 0) {
+				this->_wbuffer.rlength(size_t(bytes));
 			}
-
-			if (this->_wbuffer.size() > 0) {
-				return true;	// wbuffer did not send all
-			}
-
-			while (!this->_slist.empty()) {
-				const Servicemessage* message = this->_slist.pop_front();
-				ssize_t bytes = this->sendBytes((const Byte*) &message->rawmsg, message->rawmsg.len);
-				if (bytes < 0) {
-					release_message(message);
-					CHECK_RETURN(bytes >= 0, false, "sendBytes error");
-				}
-
-				if (size_t(bytes) < message->rawmsg.len) {
-					this->_wbuffer.append((const Byte*) (&message->rawmsg) + bytes, message->rawmsg.len - bytes);
-				}
-
-				release_message(message);
-
-				if (this->_wbuffer.size() > 0) {
-					return true;	// send wouldblock
-				}
-			}			
 		}
+
+		if (this->_wbuffer.size() > 0) {
+			return true;	// wbuffer did not send all
+		}
+
+		while (!this->_slist.empty()) {
+			const Servicemessage* message = this->_slist.pop_front();
+			ssize_t bytes = this->sendBytes((const Byte*) &message->rawmsg, message->rawmsg.len);
+			if (bytes < 0) {
+				release_message(message);
+				CHECK_RETURN(bytes >= 0, false, "sendBytes error");
+			}
+
+			if (size_t(bytes) < message->rawmsg.len) {
+				this->_wbuffer.append((const Byte*) (&message->rawmsg) + bytes, message->rawmsg.len - bytes);
+			}
+
+			release_message(message);
+
+			if (this->_wbuffer.size() > 0) {
+				return true;	// send wouldblock
+			}
+		}			
+
 		return true;
 	}
 
