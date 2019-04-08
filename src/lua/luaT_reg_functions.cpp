@@ -408,7 +408,7 @@ BEGIN_NAMESPACE_TNODE {
 		msg->rawmsg.flags = 0;
 		msg->rawmsg.len = byteSize + sizeof(Socketmessage);
 		
-		sNetworkManager.sendMessage(message);		
+		sNetworkManager.sendMessage(msg);
 		return 0;
 	}
 
@@ -453,7 +453,7 @@ BEGIN_NAMESPACE_TNODE {
 	// void newtimer(milliseconds, function(milliseconds) end)
 	static int cc_newtimer(lua_State* L) {
 		int args = lua_gettop(L);
-		CHECK_RETURN(args == 2, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(args == 2, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isnumber(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
 		CHECK_RETURN(lua_isfunction(L, -(args - 1)), 0, "[%s]", lua_typename(L, lua_type(L, -(args - 1))));		
 
@@ -465,6 +465,9 @@ BEGIN_NAMESPACE_TNODE {
 		lua_pushvalue(L, -(args - 1));
 		int ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
+		//TODO:
+		(void)(milliseconds);
+		(void)(ref);
 		
 		return 0;
 	}

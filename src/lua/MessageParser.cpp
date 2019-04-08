@@ -25,7 +25,7 @@ BEGIN_NAMESPACE_TNODE {
 			bool encode(lua_State* L, u32 msgid, std::string& out) override;
 			bool decode(lua_State* L, u32 msgid, const void* buf, size_t bufsize) override;
 			bool decode(lua_State* L, u32 msgid, const std::string& in) override;
-			google::protobuf::Message* encode(lua_State* L, u32 msgid) overide;
+			google::protobuf::Message* encode(lua_State* L, u32 msgid) override;
 
 		private:
 			DiskSourceTree _tree;
