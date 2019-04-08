@@ -75,7 +75,7 @@ exit_failure:
 
 	void ServiceManager::schedule() {
 		std::vector<Service*> schelist, shutlist;
-		this->_services.traverse([&v](u32 sid, Service* service) {
+		this->_services.traverse([&schelist, &shutlist](u32 sid, Service* service) {
 			if (service->isstop()) {
 				shutlist.push_back(service);
 			}
