@@ -60,8 +60,9 @@ exit_failure:
 	bool ServiceManager::exitservice(u32 sid) {
 		Service* service = this->getService(sid);
 		CHECK_RETURN(service, false, "not found service: %d", sid);
-		this->_services.eraseKey(sid);
-		SafeDelete(service);
+		//this->_services.eraseKey(sid);
+		//SafeDelete(service);
+		service->stop();
 		Debug << "exit service: " << sid;
 		return true;
 	}

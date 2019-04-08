@@ -13,12 +13,41 @@ BEGIN_NAMESPACE_TNODE {
 				while (this->_locker.test_and_set(std::memory_order_acquire));
 			}
 
+			bool trylock() {
+				return !this->_flag->test_and_set();
+			}
+
 			void unlock() {
 				this->_locker.clear(std::memory_order_release);
 			}
 		private:
 			std::atomic_flag _locker = ATOMIC_FLAG_INIT;
 	};
+#if 0
+	class SpinlockerGuard {
+		std::atomic_flag* _flag = nullptr;
+		public:
+			void lock() {
+				while (this->trylock());
+			}
+
+			bool trylock() {
+				return !this->_flag->test_and_set();
+			}
+
+			void unlock() {
+				this->_flag->clear();
+			}
+
+		public:
+			lock_guard(std::atomic_flag* flag) : _flag(flag) {
+			}
+
+			~lock_guard() {
+				this->unlock();
+			}		
+	};
+#endif	
 }
 
 #endif

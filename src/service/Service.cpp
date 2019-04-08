@@ -38,9 +38,7 @@ BEGIN_NAMESPACE_TNODE {
 		for (const Servicemessage* msg = this->getMessage(); msg; msg = this->getMessage()) {
 			this->msgParser(msg);
 			release_message(msg);
-		}
-
-		
+		}		
 	}
 
 	//
