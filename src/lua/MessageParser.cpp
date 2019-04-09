@@ -17,7 +17,7 @@ BEGIN_NAMESPACE_TNODE {
 			~MessageParserInternal();
 
 		public:
-			bool load(const char* filename) override;/* filename also is directory */
+			bool loadmsg(const char* filename) override;/* filename also is directory */
 			bool regmsg(u32 msgid, const char* name) override;
 
 		public:
@@ -63,7 +63,7 @@ BEGIN_NAMESPACE_TNODE {
 			void decodeFieldDefaultValue(lua_State* L, const Message& message, const FieldDescriptor* field);
 	};
 
-	bool MessageParserInternal::load(const char* filename) {
+	bool MessageParserInternal::loadmsg(const char* filename) {
 		std::function<bool(const char*)> func = [this](const char* fullname)->bool {
 			return this->parseProtoFile(fullname);
 		};

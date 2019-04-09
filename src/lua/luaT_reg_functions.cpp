@@ -416,6 +416,23 @@ BEGIN_NAMESPACE_TNODE {
 	}
 
 	//
+	// void loadmsg(filename) // filename also is a directory
+	static int cc_regmsg(lua_State* L) {
+		int args = lua_gettop(L);
+		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
+		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
+
+		u32 sid = luaT_getOwner(L);
+		Service* service = sServiceManager.getService(sid);
+		assert(service);
+		
+		const char* filename = lua_tostring(L, -args);
+		bool rc = service->messageParser()->loadmsg(filename);
+		CHECK_RETURN(retval, 0, "loadmsg: %s failure", filename);
+		return 0;
+	}
+	
+	//
 	// void regmsg(msgid, name)
 	static int cc_regmsg(lua_State* L) {
 		int args = lua_gettop(L);
@@ -491,6 +508,7 @@ BEGIN_NAMESPACE_TNODE {
 		LUA_REGISTER(L, "newclient", cc_newclient);
 		LUA_REGISTER(L, "response", cc_response);
 		LUA_REGISTER(L, "release_message", cc_release_message);
+		LUA_REGISTER(L, "loadmsg", cc_loadmsg);
 		LUA_REGISTER(L, "regmsg", cc_regmsg);
 		LUA_REGISTER(L, "closesocket", cc_closesocket);
 
