@@ -417,7 +417,7 @@ BEGIN_NAMESPACE_TNODE {
 
 	//
 	// void loadmsg(filename) // filename also is a directory
-	static int cc_regmsg(lua_State* L) {
+	static int cc_loadmsg(lua_State* L) {
 		int args = lua_gettop(L);
 		CHECK_RETURN(args == 1, 0, "`%s` lack args:%d", __FUNCTION__, args);
 		CHECK_RETURN(lua_isstring(L, -args), 0, "[%s]", lua_typename(L, lua_type(L, -args)));
@@ -428,7 +428,7 @@ BEGIN_NAMESPACE_TNODE {
 		
 		const char* filename = lua_tostring(L, -args);
 		bool rc = service->messageParser()->loadmsg(filename);
-		CHECK_RETURN(retval, 0, "loadmsg: %s failure", filename);
+		CHECK_RETURN(rc, 0, "loadmsg: %s failure", filename);
 		return 0;
 	}
 	

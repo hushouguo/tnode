@@ -13,7 +13,7 @@ function msgParser(fd, entityid, msgid, o)
 		dump(o)
 		cc.response(fd, entityid, 2, {
 			value_bool = o.value_bool,
-			value_string = "protocol.EchoResponse",
+			value_string = o.value_string,
 			value_float = o.value_float,
 			value_double = o.value_double,
 			value_sint32 = o.value_sint32,
